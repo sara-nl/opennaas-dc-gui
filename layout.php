@@ -157,17 +157,6 @@ function write_html_foot() {
 <?
 }
 
-function write_page_head() {
-	global $header_company_image, $header_opennaas_image;
-?>
-<table width="100%" cellpadding="0" cellspacing="0" border="0">
-<tr><td><a href='overview.php'><img src='<?=$header_company_image?>'></a></td>
-	<td>OpenNaas GUI</td><td>
-	<img src='<?=$header_opennaas_image?>' width="150" height="100"></td>
-</tr>
-</table>
-<?
-}
 
 function write_resource_menu($resourcename, $active) {
 	
