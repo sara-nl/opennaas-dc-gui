@@ -8,9 +8,9 @@ This interface is written as an example to demonstrate the capabilities of OpenN
 Prerequisites
 -------------
 
-This applications uses PHP and requires a working instance of OpenNaaS 0.28
-To download and install OpenNaaS, visit http://opennaas.org/downloads/
-Or alternatively the github repository https://github.com/dana-i2cat/opennaas/ 
+This applications uses PHP and requires a working instance of OpenNaaS 0.28<br>
+To download and install OpenNaaS, visit http://opennaas.org/downloads/ <br>
+Or alternatively the github repository https://github.com/dana-i2cat/opennaas/ <br>
 
 Installation
 ------------
