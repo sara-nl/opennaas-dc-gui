@@ -39,6 +39,6 @@ GNU General Public License (GPL)</a>.
 </div>                 
 
 <?
-write_html_footer();
+write_html_foot();
 ?>
 
