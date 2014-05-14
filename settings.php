@@ -1,4 +1,4 @@
-<?php
+<?php 
 	
 $RESTuserName = "admin";
 $RESTpassword = "123456";

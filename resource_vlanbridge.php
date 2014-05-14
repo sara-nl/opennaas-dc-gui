@@ -66,7 +66,7 @@ print "queue:" ; print_r($queue);
 						</tr>
 					</thead>
 					<tbody>					
-<?	
+<?php
 	foreach ($routers as $router) {
 
 	   	foreach ($router['queue'] as $key => $value) {
@@ -100,6 +100,6 @@ print "queue:" ; print_r($queue);
 				</form>
 			</div>
 		</div>
-<?
+<?php
 write_html_foot();
 ?>

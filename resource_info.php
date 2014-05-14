@@ -1,4 +1,4 @@
-<?
+<?php
 
 include "settings.php";
 include "layout.php";

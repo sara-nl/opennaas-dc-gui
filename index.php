@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 include "settings.php";
 include "layout.php";
@@ -38,7 +38,7 @@ GNU General Public License (GPL)</a>.
  <img src="images/logo/opennaas.png" style="vertical-align:middle;margin-left:28px" alt="opennaas-logo"></a>
 </div>                 
 
-<?
-write_html_foot();
-?>
+<?php
+write_html_footer();
 
+?>

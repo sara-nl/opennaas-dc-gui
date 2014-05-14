@@ -50,7 +50,7 @@ function modify($GET) {
 				@import "<?=$table_CSS_URL?>";
 			</style>
 		</head>
-	<?
+	<?php
 	if ($modifyAction == "IPv4Address" | $modifyAction == "IPv6Address" | $modifyAction == "description" ) {
 		?>
 		<body id="dt_example">
@@ -68,7 +68,7 @@ function modify($GET) {
 
 			</form>
 		</body>
-		<?
+		<?php
 	}
 	if ($modifyAction == "aggregate" ) {
 		$aggr = GetAggregatedInterface($resourceName, $interface);
@@ -93,7 +93,7 @@ function modify($GET) {
 
 			</form>
 		</body>
-		<?	
+		<?php
 		}
 		?>
 

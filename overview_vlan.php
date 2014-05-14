@@ -28,7 +28,7 @@ write_html_menu();
 						</tr>
 					</thead>
 					<tbody>					
-<?	
+<?php
 	$i=0;
    	foreach ($VLANs as $vlan) {
 		$color = ($i % 2) + 1;
@@ -62,6 +62,6 @@ write_html_menu();
 				</form>
 			</div>
 	        
-<?
+<?php
 write_html_foot();
 ?>

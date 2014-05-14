@@ -11,6 +11,7 @@ Prerequisites
 This applications uses PHP and requires a working instance of OpenNaaS 0.28<br>
 To download and install OpenNaaS, visit http://opennaas.org/downloads/ <br>
 Or alternatively the github repository https://github.com/dana-i2cat/opennaas/ <br>
+It also requires the php5-curl package.<br>
 
 Installation
 ------------

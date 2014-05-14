@@ -63,7 +63,7 @@ write_resource_menu($_GET['resourcename'], 0);
 					</thead>
 					<tbody>
 					
-<?	
+<?php
 	$i=0;
 	//print_r($interfaces);
    	foreach ($interfaces as $interface) {
@@ -99,13 +99,13 @@ write_resource_menu($_GET['resourcename'], 0);
 
 				?>
 				<td><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv4Address&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?=$ip?></a></td>
-				<?
+				<?php
 			}
 		}
 		if ($ipv4count == 0) {
 			?>
 			<td align='left'><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv4Address&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;">...</a></td>
-			<?
+			<?php
 		}
 		
 		// IPv6
@@ -115,13 +115,13 @@ write_resource_menu($_GET['resourcename'], 0);
 				$ipv6count = $ipv6count + 1;
 				?>
 				<td><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv6Address&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?=$ip?></a></td>
-				<?
+				<?php
 			}
 		}
 		if ($ipv6count == 0) {
 			?>
 			<td align='left'><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv6Address&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;">...</a></td>
-			<?
+			<?php
 		}	
 
 		// Status
@@ -148,6 +148,6 @@ write_resource_menu($_GET['resourcename'], 0);
 			</form>
 		</div>
 	</div>
-<?
+<?php
 write_html_foot();    
 ?>

@@ -11,10 +11,9 @@ function write_html_head() {
 		<link rel="shortcut icon" type="image/ico" href="https://www.surfsara.nl/sites/all/themes/st_sara/favicon.ico" />
 		
 		<title>SURFsara OpenNaaS GUI</title>
-		<style type="text/css" title="currentStyle">
-			@import "<?=$page_CSS_URL?>";
-			@import "<?=$table_CSS_URL?>";
-		</style>
+		
+		<link rel="stylesheet" type="text/css" href="css/main.css">
+		<link rel="stylesheet" type="text/css" href="css/new.css">
 		<link rel="stylesheet" type="text/css" href="css/jquery-ui.custom.css">
 		<link rel="stylesheet" type="text/css" href="css/jquery.table.css">
 		<link rel="stylesheet" type="text/css" href="css/nconf-widget.css">
@@ -61,7 +60,7 @@ function write_html_head() {
     </center>
 </div>
 <div id="mainwindow">
-<?
+<?php
 }
 
 function write_html_menu() {
@@ -80,63 +79,6 @@ function write_html_menu() {
 
     <h2 class="ui-widget-header header"><span>Additional Items</span></h2>
     <div class="ui-widget-content box_content">
-
-
-<!-- ###################### 
-
-        <table border=0 width=188><colgroup>
-            <col width="65">
-            <col width="55">
-            <col width="68">
-          </colgroup><tr>
-                <td colspan="1" style="vertical-align:top">
-                    <div class="link_with_tag">OS
-                    </div>
-                </td>
-                <td colspan="2" align="right">
-                    <div align="right"><b><a href="overview.php?class=os" >Show</a> / <a href="handle_item.php?item=os" >Add</a></b></div>
-                </td>
-              </tr><tr>
-                <td colspan="1" style="vertical-align:top">
-                    <div class="link_with_tag">Contacts
-                    </div>
-                </td>
-                <td colspan="2" align="right">
-                    <div align="right"><b><a href="overview.php?class=contact" >Show</a> / <a href="handle_item.php?item=contact" >Add</a></b></div>
-                </td>
-              </tr><tr>
-                <td colspan="2" style="vertical-align:top">
-                    <div class="link_with_tag">Contactgroups
-                    </div>
-                </td>
-                <td colspan="1" align="right">
-                    <div align="right"><b><a href="overview.php?class=contactgroup" >Show</a> / <a href="handle_item.php?item=contactgroup" >Add</a></b></div>
-                </td>
-              </tr><tr>
-                <td colspan="2" style="vertical-align:top">
-                    <div class="link_with_tag">Checkcommands
-                    </div>
-                </td>
-                <td colspan="1" align="right">
-                    <div align="right"><b><a href="overview.php?class=checkcommand" >Show</a> / <a href="handle_item.php?item=checkcommand" >Add</a></b></div>
-                </td>
-              </tr><tr>
-                <td colspan="2" style="vertical-align:top">
-                    <div class="link_with_tag">Misccommands
-                    </div>
-                </td>
-                <td colspan="1" align="right">
-                    <div align="right"><b><a href="overview.php?class=misccommand" >Show</a> / <a href="handle_item.php?item=misccommand" >Add</a></b></div>
-                </td>
-              </tr><tr>
-                <td colspan="2" style="vertical-align:top">
-                    <div class="link_with_tag">Timeperiods
-                    </div>
-                </td>
-                <td colspan="1" align="right">
-                    <div align="right"><b><a href="overview.php?class=timeperiod" >Show</a> / <a href="handle_item.php?item=timeperiod" >Add</a></b></div>
-                </td>
-              </tr></table> -->
                 
 </div>
     
@@ -147,14 +89,14 @@ function write_html_menu() {
 <div id="mainspace" style="float: left; width: 22px; height: 100px"> </div>
 <div id="maincontent">
 
-<?
+<?php
 }
 
 function write_html_foot() {
 ?>
 	</body>
 </html>
-<?
+<?php
 }
 
 
@@ -164,13 +106,13 @@ function write_resource_menu($resourcename, $active) {
 	else   print "<a href='resource_router.php?resourcename=".$resourcename."'>Chassis</a> | ";
 	if ($active == 1) print "<b>Queue</b> |";
 	else print "<a href='resource_queue.php?resourcename=".$resourcename."'>Queue</a> |";
-    if ($active == 2) print "<b>VLANs</b> |";
-    else print "<a href='resource_vlanbridge.php?resourcename=".$resourcename."'>VLANs</a> |";
+ 	if ($active == 2) print "<b>VLANs</b> |";
+	else print "<a href='resource_vlanbridge.php?resourcename=".$resourcename."'>VLANs</a> |";
 	if ($active == 3) print "<b>Resource Info</b>\n";
 	else print "<a href='resource_info.php?resourcename=".$resourcename."'>Resource Info</a>";
 	print "<h1>".$resourcename;
-    $queue = getQueue($resourcename);
-    if (strlen($queue[0]) > 2) print " -- ". count($queue)." Actions Queued --";
-    print "</h1>\n";
+	$queue = getQueue($resourcename);
+	if (strlen($queue[0]) > 2) print " -- ". count($queue)." Actions Queued --";
+	print "</h1>\n";
 }
 ?>
