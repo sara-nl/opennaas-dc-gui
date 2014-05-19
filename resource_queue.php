@@ -31,13 +31,18 @@ function updateResources() {
 			if ($_GET['action'] == "queueclear") {
 				$xml = curl_POST($REST_URL.$type."/".$name."/queue/clear","" );
 			}
-			print $xml;
+			//print $xml;
 			
 		}
 	}
 }
+
 	
-if ($_GET['formAction'] == 'update') updateResources();
+if (isset($_GET["formAction"])) {
+	if ($_GET['formAction'] == 'update') updateResources();
+}
+
+
 	
 
 
@@ -51,7 +56,7 @@ else {
 write_html_head();
 write_html_menu();
 write_resource_menu($_GET['resourcename'], 1);
-print "queue:" ; print_r($queue);
+
  ?>
 		<div id="container">
 			<div id="demo">

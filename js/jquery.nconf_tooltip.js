@@ -15,7 +15,7 @@ jQuery.nconf_tooltip = function() {
         document.body.appendChild (flyingObj);
     }
 
-    $('.jQ_tooltip').live("mouseenter", function(e) {
+    /*$('.jQ_tooltip').live("mouseenter", function(e) {
         if (!flyingObj) {
             CreateFlyingObj ();
         }
@@ -27,10 +27,10 @@ jQuery.nconf_tooltip = function() {
         $(this).attr("title", "");
         flyingObj.style.display = "block";
 
-    });
+    });*/
 
 
-    $('.jQ_tooltip').live("mousemove", function(e) {
+   /* $('.jQ_tooltip').live("mousemove", function(e) {
         if (!flyingObj) {
             CreateFlyingObj ();
         }
@@ -47,7 +47,7 @@ jQuery.nconf_tooltip = function() {
         }
 
     });
-
+*/
 
 };
 

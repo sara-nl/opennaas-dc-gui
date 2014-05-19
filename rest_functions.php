@@ -141,6 +141,7 @@ function getResources() {
 
 function getQueue($resourcename) {
 	$routers = getResources();
+	$queue = " ";
 	foreach ($routers as $router) {
 		if ($router['name'] == $resourcename) {
 			$queue = $router['queue'];
@@ -161,10 +162,10 @@ function getResourceStatus($resourcename) {
 
 function getRouterInterfaces($resourcename) {	 
 	global $REST_URL;
-	$ipAddress = "";
 	$int_xml = (array) curl_query($REST_URL."router/".$resourcename."/chassis/interfaces","xml");
 	
-	foreach ($int_xml['interface'] as $i) {     
+	foreach ($int_xml['interface'] as $i) {  
+		$ipAddress="";   
 		$ipinfo = (array) curl_query($REST_URL."router/".$resourcename."/ip/interfaces/addresses?interface=".$i,"xml");
 
 		if (isset($ipinfo['ipAddress'])) $ipAddress = $ipinfo['ipAddress'];
@@ -182,8 +183,8 @@ function GetAggregatedInterfaces($resourcename) {
 	global $REST_URL;
 	$xml = (array) curl_query($REST_URL."router/".$resourcename."/linkaggregation/","xml");
 	
-
-	return (array)$xml['interface'];
+	if (!isset($xml['interface'])) return array();
+	else return (array)$xml['interface'];
 }
 
 function GetAggregatedInterface($resourcename, $interfacename) {	 
@@ -198,8 +199,7 @@ function GetAggregatedInterface($resourcename, $interfacename) {
 					'minimumIf' => "1", 			// FAKED!!!
 					'protocol' => (string)$xml['aggregationOptions']->entry->key,
 					'mode' => (string)$xml['aggregationOptions']->entry->value
-					);
-			    	
+					);			    	
 	return $aggr;
 }
 
