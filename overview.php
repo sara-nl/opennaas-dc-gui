@@ -26,14 +26,15 @@ function updateResources() {
 			}
 			if ($_GET['action'] == "remove") {
 				$xml = curl_DELETE($REST_URL."resources/".$id,"info" );
-				print $xml;
 			}
 			
 		}
 	}
 }
 	
-if ($_GET['formAction'] == 'update') updateResources();
+if (isset($_GET["formAction"])) {
+	if ($_GET['formAction'] == 'update') updateResources();
+}
 	
 
 $resources = getResources();
@@ -58,7 +59,9 @@ write_html_menu();
 					<tbody>					
 <?php
 	$i=0;
+
    	foreach ($resources as $resource) {
+   		
 		$color = ($i % 2) + 1;
 		if ($resource['status'] == "ACTIVE") $colorstring = "class='color_list".$color." highlight'";
 		if ($resource['status'] == "INITIALIZED") $colorstring = "class='ui-state-error highlight'";

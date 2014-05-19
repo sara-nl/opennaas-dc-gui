@@ -36,9 +36,9 @@ GNU General Public License (GPL)</a>.
  <img src="images/logo/i2cat-logo.png" style="vertical-align:middle;margin-left:30px" alt="I2cat-logo"></a>
  <a href="http://www.opennaas.org" target=_blank>
  <img src="images/logo/opennaas.png" style="vertical-align:middle;margin-left:28px" alt="opennaas-logo"></a>
-</div>                 
+</div>
 
 <?php
-write_html_footer();
+write_html_foot();
 
 ?>

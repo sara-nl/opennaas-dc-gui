@@ -1,4 +1,4 @@
-<?php
+<?php 
 
 include "settings.php";
 
@@ -115,6 +115,8 @@ function getResources() {
 	$capabilities ="";
 	$xml = (array)curl_query($REST_URL."resources/","xml");
 	
+	if (!is_array($xml['resource'])) $xml['resource'] = array($xml['resource']);   // required if there is only one resource, because foreach requires an array
+	
 	foreach ($xml['resource'] as $resource) {
 
     	$descriptor_xml = curl_query($REST_URL."resources/".$resource."/descriptor","xml");
@@ -147,17 +149,31 @@ function getQueue($resourcename) {
 	return $queue;
 }
 
+function getResourceStatus($resourcename) {
+	$routers = getResources();
+	foreach ($routers as $router) {
+		if ($router['name'] == $resourcename) {
+			$status = $router['status'];
+		}
+	}
+	return $status;
+}
+
 function getRouterInterfaces($resourcename) {	 
 	global $REST_URL;
+	$ipAddress = "";
 	$int_xml = (array) curl_query($REST_URL."router/".$resourcename."/chassis/interfaces","xml");
 	
 	foreach ($int_xml['interface'] as $i) {     
 		$ipinfo = (array) curl_query($REST_URL."router/".$resourcename."/ip/interfaces/addresses?interface=".$i,"xml");
+
+		if (isset($ipinfo['ipAddress'])) $ipAddress = $ipinfo['ipAddress'];
+
 		$intinfo_xml = curl_query($REST_URL."router/".$resourcename."/chassis/interfaces/info?interfaceName=".$i,"xml");			
 			$interfaces[]= array(	'name' => (string)$intinfo_xml->name , 
 						    		'state' => (string)$intinfo_xml->state,
 									'description' => (string)$intinfo_xml->description,
-									'ip' => $ipinfo['ipAddress']); 
+									'ip' => $ipAddress); 
 	}
 	return $interfaces;
 }
@@ -166,6 +182,7 @@ function GetAggregatedInterfaces($resourcename) {
 	global $REST_URL;
 	$xml = (array) curl_query($REST_URL."router/".$resourcename."/linkaggregation/","xml");
 	
+
 	return (array)$xml['interface'];
 }
 
@@ -248,4 +265,6 @@ function getProtocolContext($resourcename) {
  
 	return $context;
 }
+
+
 ?>

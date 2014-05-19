@@ -34,17 +34,22 @@ function updateInterfaces() {
 	
 	if ($_GET['action'] == "queueexecute") {
 		$xml = curl_POST($REST_URL."router/".$_GET['resourcename']."/queue/execute","" );
+		header( 'Location: /opennaas-dc-gui/resource_router.php?resourcename=switch2' );
 	}
 }
 	
-if ($_GET['formAction'] == 'update') updateInterfaces();
+if (isset($_GET["formAction"])) {
+	if ($_GET['formAction'] == 'update') updateInterfaces();
+}
 
-$interfaces = getRouterInterfaces($resourcename);
-$aggregates = GetAggregatedInterfaces($resourcename);
 
 write_html_head();
 write_html_menu();
 write_resource_menu($_GET['resourcename'], 0);
+
+$resourceState = getResourceStatus($resourcename);
+
+if  ($resourceState != "ACTIVE") { print "Resource is not active!";}
 
 ?>
 		
@@ -65,7 +70,11 @@ write_resource_menu($_GET['resourcename'], 0);
 					
 <?php
 	$i=0;
-	//print_r($interfaces);
+if  ($resourceState == "ACTIVE") {
+
+	$interfaces = getRouterInterfaces($resourcename);
+	$aggregates = GetAggregatedInterfaces($resourcename);
+   	
    	foreach ($interfaces as $interface) {
    		$isAggr = FALSE;
    		// Interface name
@@ -76,19 +85,19 @@ write_resource_menu($_GET['resourcename'], 0);
    		}
 		if ($isAggr == TRUE) {
 		?>
-		<tr><td><b><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=aggregate&resourceName=<?=$resourcename?>&interface=<?=$modifyValue?>&modifyValue=<?=$interface['name']?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?=$interface['name']?></a></b></td>
-		<?
+		<tr><td><b><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=aggregate&resourceName=<?php echo $resourcename?>&interface=<?php echo $modifyValue?>&modifyValue=<?php $interface['name']?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?php echo $interface['name']?></a></b></td>
+		<?php
 		} else print "<tr><td>".$interface['name']."</td>";
 		
 		// Interface description
 		if  (strlen($interface['description']) == 0) {
 		?>
-		<td align='left'><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=description&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$interface['description']?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;">...</a></td>
-		<? }
+		<td align='left'><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=description&resourceName=<?php echo $resourcename?>&interface=<?php echo $interface['name']?>&modifyValue=<?php echo $interface['description']?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;">...</a></td>
+		<?php }
 		else {
 		?>
-	    <td><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=description&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$interface['description']?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?=$interface['description']?></a></td>
-		<? }
+	    <td><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=description&resourceName=<?php echo $resourcename?>&interface=<?php echo $interface['name']?>&modifyValue=<?php echo $interface['description']?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?php echo $interface['description']?></a></td>
+		<?php }
 
 
 		// IPv4
@@ -98,13 +107,13 @@ write_resource_menu($_GET['resourcename'], 0);
 				$ipv4count = $ipv4count + 1;
 
 				?>
-				<td><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv4Address&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?=$ip?></a></td>
+				<td><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv4Address&resourceName=<?php echo $resourcename?>&interface=<?php echo $interface['name']?>&modifyValue=<?php echo $ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?php echo $ip?></a></td>
 				<?php
 			}
 		}
 		if ($ipv4count == 0) {
 			?>
-			<td align='left'><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv4Address&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;">...</a></td>
+			<td align='left'><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv4Address&resourceName=<?php echo $resourcename?>&interface=<?php echo $interface['name']?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;">...</a></td>
 			<?php
 		}
 		
@@ -114,13 +123,13 @@ write_resource_menu($_GET['resourcename'], 0);
 			if (stripos($ip, ":")) {
 				$ipv6count = $ipv6count + 1;
 				?>
-				<td><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv6Address&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?=$ip?></a></td>
+				<td><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv6Address&resourceName=<?php echo $resourcename?>&interface=<?php echo $interface['name']?>&modifyValue=<?php echo $ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;"><?php echo $ip?></a></td>
 				<?php
 			}
 		}
 		if ($ipv6count == 0) {
 			?>
-			<td align='left'><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv6Address&resourceName=<?=$resourcename?>&interface=<?=$interface['name']?>&modifyValue=<?=$ip?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;">...</a></td>
+			<td align='left'><a href='#' onClick="MyWindow=window.open('modify_popup.php?modifyAction=IPv6Address&resourceName=<?php echo $resourcename?>&interface=<?php echo $interface['name']?>','MyWindow','toolbar=no,location=no,directories=no,status=no, menubar=no,scrollbars=no,resizable=no,width=600,height=300'); return false;">...</a></td>
 			<?php
 		}	
 
@@ -131,16 +140,17 @@ write_resource_menu($_GET['resourcename'], 0);
 		print "<td class='center'><input type='checkbox' name='checkbox_".urlencode($interface['name'])."'></td></tr>\n";
 		$i = $i+ 1;
 	}
+}
 	?>		
 			</tbody>		
 			</table>
 			<input type=hidden name='formAction' value='update'>
-			<input type=hidden name='resourcename' value='<?=$resourcename?>'>
+			<input type=hidden name='resourcename' value='<?php echo $resourcename?>'>
 			<select name='action'>
 						<option value="">-- Choose Action --</option>
 					  	<option value="up">Bring interface up</option>
 					  	<option value="down">Bring interface down</option>
-					  	<option value="queueexecute">Execute queue for <?=$resourcename?></option>
+					  	<option value="queueexecute">Execute queue for <?php echo $resourcename?></option>
 					</select>
 			<div style="text-align:right; padding-bottom:1em;">
 						<button type="submit">Submit form</button>

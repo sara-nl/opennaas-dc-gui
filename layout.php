@@ -2,7 +2,7 @@
 require_once "settings.php";
 
 function write_html_head() {
-	global $jQuery_URL1, $jQuery_URL2,  $jQuery_URL3, $page_CSS_URL, $table_CSS_URL, $BASE_URL;
+	global $page_CSS_URL, $table_CSS_URL, $BASE_URL;
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <html>
@@ -18,9 +18,9 @@ function write_html_head() {
 		<link rel="stylesheet" type="text/css" href="css/jquery.table.css">
 		<link rel="stylesheet" type="text/css" href="css/nconf-widget.css">
 
-		<script type="text/javascript" language="javascript" src="<?=$jQuery_URL1?>"></script>
-		<script type="text/javascript" language="javascript" src="<?=$jQuery_URL2?>"></script>
-		<script type="text/javascript" language="javascript" src="<?=$jQuery_URL3?>"></script>
+		<script type="text/javascript" language="javascript" src="http://www.datatables.net/release-datatables/media/js/jquery.js"></script>
+		<script type="text/javascript" language="javascript" src="http://www.datatables.net/release-datatables/media/js/jquery.dataTables.js"></script>
+		<script type="text/javascript" language="javascript" src="https://datatables.net/examples/examples_support/jquery.jeditable.js"></script>
 
       <script src="js/jquery.nconf_ajax_debug.js" type="text/javascript"></script>
       <script src="js/jquery.nconf_help_admin.js" type="text/javascript"></script>
@@ -61,6 +61,7 @@ function write_html_head() {
 </div>
 <div id="mainwindow">
 <?php
+
 }
 
 function write_html_menu() {
@@ -72,9 +73,9 @@ function write_html_menu() {
     <h2 class="ui-widget-header header"><span><a href="index.php" >Home</a></span></h2>
  <h2 class="ui-widget-header header"><span>Basic Items</span></h2>
     <div class="ui-widget-content box_content"><table border=0 width=188>
-    	<div class="link_with_tag"><a href="overview.php" >Show Resources</a></div>
-    	<div class="link_with_tag"><a href="resource_queue.php?resourcename=_all" >Show Queue</a></div>
-        <div class="link_with_tag"><a href="overview_vlan.php" >Show VLANs</a></div>
+    	<tr><td><div class="link_with_tag"><a href="overview.php" >Show Resources</a></div></td></tr>
+    	<tr><td><div class="link_with_tag"><a href="resource_queue.php?resourcename=_all" >Show Queue</a></div></td></tr>
+        <tr><td><div class="link_with_tag"><a href="overview_vlan.php" >Show VLANs</a></div></td></tr>
     	</table></div>
 
     <h2 class="ui-widget-header header"><span>Additional Items</span></h2>
@@ -92,12 +93,11 @@ function write_html_menu() {
 <?php
 }
 
-function write_html_foot() {
-?>
-	</body>
-</html>
-<?php
-}
+function write_html_foot() 
+{
+print " </body>";
+print "</html>";
+} 
 
 
 function write_resource_menu($resourcename, $active) {
@@ -115,4 +115,6 @@ function write_resource_menu($resourcename, $active) {
 	if (strlen($queue[0]) > 2) print " -- ". count($queue)." Actions Queued --";
 	print "</h1>\n";
 }
+
+
 ?>
