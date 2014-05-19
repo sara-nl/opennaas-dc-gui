@@ -34,7 +34,7 @@ function updateInterfaces() {
 	
 	if ($_GET['action'] == "queueexecute") {
 		$xml = curl_POST($REST_URL."router/".$_GET['resourcename']."/queue/execute","" );
-		header( 'Location: /opennaas-dc-gui/resource_router.php?resourcename=switch2' );
+		header( 'Location: /opennaas-dc-gui/resource_router.php?resourcename=' . $_GET['resourcename'] );
 	}
 }
 	

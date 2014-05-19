@@ -6,16 +6,16 @@ $(document).ready(function(){
     $('#footer fieldset').not( $('fieldset fieldset') ).addClass('ui-state-highlight');
 
     // button style
-    $( "#buttons > input, input:submit, input:button, :button" )
-        .add('a > img', '#ui-nconf-icon-bar')
-        .button();
+   // $( "#buttons > input, input:submit, input:button, :button" )
+    //    .add('a > img', '#ui-nconf-icon-bar')
+    //    .button();
         
-    // buttons for images
+    // buttons for images  
     //$('.icon_buttons > a').button().children("span").removeClass("ui-button-text");
 
 
     // Back button
-    $('#ui-nconf-icon-bar .button_back').button({
+    /*$('#ui-nconf-icon-bar .button_back').button({
         icons: {
             primary: "ui-icon-arrowreturnthick-1-w"
         },
@@ -26,15 +26,15 @@ $(document).ready(function(){
             primary: "ui-icon-home"
         },
         text: false
-    });
+    });*/
 
     // tooltip
     $.nconf_tooltip();
 
     // link hovers (a litle bit complex because no simple theme css available)
-    $( "a" ).live('hover', function () {
-        $(this).not(".ui-button").not("[role=button]").toggleClass("ui-state-hover ui-nconf-link");
-    });
+   // $( "a" ).live('hover', function () {
+    //    $(this).not(".ui-button").not("[role=button]").toggleClass("ui-state-hover ui-nconf-link");
+    //});
 
     // all image links should contain lighten class, for mouseover effect, expect the new toolbar icons
     $( "a > img").not('a > img', '#ui-nconf-icon-bar').addClass("lighten");
@@ -69,3 +69,4 @@ $(document).ready(function(){
 
 
 });
+
