@@ -26,12 +26,26 @@ function modify($GET) {
 	if ($GET['modifyAction'] == "IPv4Address") {
 		$xml = curl_POST($REST_URL."router/".$GET['resourceName']."/ip/interfaces/addresses/ipv4?interface=".$_GET['interface'],$GET['newModifyValue'] );
 	}
-	if ($_GET['modifyAction'] == "IPv6Address") {
+	else if ($_GET['modifyAction'] == "IPv6Address") {
 		$xml = curl_POST($REST_URL."router/".$GET['resourceName']."/ip/interfaces/addresses/ipv6?interface=".$_GET['interface'],$GET['newModifyValue'] );
 	}
-	if ($_GET['modifyAction'] == "description") {
+	else if ($_GET['modifyAction'] == "description") {
 		$xml = curl_POST($REST_URL."router/".$GET['resourceName']."/ip/interfaces/description?interface=".$_GET['interface'],$GET['newModifyValue'] );
 	}
+
+    // close pop up window and reload main page
+    ?>
+    <html>
+        <head>
+            <script type="text/javascript" charset="utf-8">
+                window.opener.location.reload();
+                self.close();
+            </script>
+        </head>
+        <body>
+        </body>
+    </html>
+    <?php
 }
 
 	global $page_CSS_URL, $table_CSS_URL;
@@ -55,7 +69,7 @@ function modify($GET) {
 	if ($modifyAction == "IPv4Address" | $modifyAction == "IPv6Address" | $modifyAction == "description" ) {
 		?>
 		<body id="dt_example">
-			<form name='modify_form' action='modify_popup.php' onSubmit='window.opener.location.reload(); self.close(); window.opener.location.reload(); ' method='get'>
+			<form name='modify_form' action='modify_popup.php' method='get'>
 				<h1><?php echo $actionstring?> <?php echo $modifyAction?></h1>
 				<table>
 					<tr><td>Current value:</td><td><?php echo $modifyValue?></td></tr>
@@ -76,7 +90,7 @@ function modify($GET) {
 		
 		?>
 		<body id="dt_example">
-			<form name='modify_form' action='modify_popup.php' onSubmit='window.opener.location.reload(); self.close(); ' method='get'>
+			<form name='modify_form' action='modify_popup.php' method='get'>
 				<h1><?php echo $actionstring?> <?php echo $modifyAction?></h1>
 				<table>
 					<tr><td>Link ID:</td><td><?php echo $aggr['id']?></td></tr>
