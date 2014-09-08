@@ -1,0 +1,12 @@
+{% extends "base_elements.html" %}
+{% block maincontent %}
+<div id="maincontent">
+<h1>Local resources</h1>
+<ul>
+{% for resource in resources %}
+   <li><a href='/local/{{ resource }}'>{{ resource }}</a>
+{% endfor %}
+</ul>
+</div>
+
+{% endblock %}

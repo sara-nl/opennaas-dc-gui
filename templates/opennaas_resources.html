@@ -1,0 +1,20 @@
+{% extends "base_elements.html" %}
+{% block scripts %}<script src="/js/opennaas-dc-gui.js"></script>{% endblock %} 
+{% block bodyclass %}class='resources'{% endblock %}
+{% block maincontent %}
+<div id="maincontent">
+
+<h1>Resources</h1>
+{{ datatable('ResourceTable', ['ID','Name','Resource type','Capabilities','Status','c'] ) }}
+<select id='ResoursesActionSelect'>
+<option value="">-- Choose Action --</option>
+<option value="start">start</option>
+<option value="stop">stop</option>
+<option value="forcestop">force stop</option>
+<option value="remove">remove</option>
+</select>
+
+<button id='ResourcesActionButton'>Go</button>
+<pre id='ResourcesCommitIndicator'>Processing ... <img src='/img/loading.gif'></pre>
+</div>
+{% endblock %}

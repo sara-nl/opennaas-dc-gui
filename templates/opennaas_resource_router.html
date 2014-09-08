@@ -1,0 +1,39 @@
+{% extends "base_elements.html" %}
+{% block scripts %}<script src="/js/opennaas-dc-gui.js"></script>{% endblock %}
+{% block bodyclass %}class='resource_router'{% endblock %}
+{% block maincontent %}
+<div id="maincontent">
+<input type=hidden id="resourcename" value="{{ name }}">
+<h1 id="resourcelabel"></h1>
+<div id="tabs">
+<ul>
+<li><a href="#tabs-1">Chassis</a></li>
+<li><a href="#tabs-2">Queue</a></li>
+<li><a href="#tabs-3">Vlans</a></li>
+<li><a href="#tabs-4">Resource Info</a></li>
+</ul>
+<div id="tabs-1">
+<pre id='ChassisCommitIndicator'>Processing ... <img src='/img/loading.gif'></pre>
+{{ datatable('ChassisTable', ['ID','Interface name','Interface description','IPv4','IPv6','Status','Action'] ) }}
+<button id='ChassisCommitButton'>Go</button>
+</div>
+<div id="tabs-2">
+{{ datatable('QueueTable', ['ID','Resource','Queue ID','Entry description','Action']) }}
+<br>
+<select id='QueueActionSelect'>
+<option value="">-- Choose Action --</option>
+<option value="execute">Execute queue</option>
+<option value="remove">Remove selected queue entries</option>
+<option value="clear">Clear Queue</option>
+</select>
+<button id='QueueActionButton'>Go</button>
+<pre id='QueueCommitIndicator'>Processing ... <img src='/img/loading.gif'></pre>
+</div>
+<div id="tabs-3">
+{{ datatable('VlanTable', ['ID','Interface name','Port mode','VLANs','Native VLAN', 'Action']) }}
+</div>
+<div id="tabs-4">
+</div>
+</div>
+</div>
+{% endblock %}

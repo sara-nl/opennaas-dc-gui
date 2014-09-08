@@ -1,0 +1,32 @@
+{% extends "base_elements.html" %}
+{% block scripts %}<script src="/js/local_resource.js"></script>{% endblock %}
+{% block maincontent %}
+<div id="maincontent">
+<input type=hidden id="resourcename" value="{{ name }}">
+<div id="tabs">
+<ul>
+<li><a href="#tabs-1">Status</a></li>
+<li><a href="#tabs-2">Configuration</a></li>
+<li><a href="#tabs-3">Queue</a></li>
+</ul>
+
+<div id="tabs-1">
+<pre id='statusLoadIndicator'>Loading ... <img src='/img/loading.gif'></pre>
+{{ datatable('StatusTable', ['ID','Interface','Admin status','Oper Status','Description','MAC addresses'] ) }}
+</div>
+<div id="tabs-2">
+<pre id='configLoadIndicator'>Loading ... <img src='/img/loading.gif'></pre>
+{{ datatable('ConfigTable', ['ID','Interface','Admin status','Vlan','Description','c']) }}
+</div>
+<div id="tabs-3">
+<pre id='configCommitIndicator'>Processing ... <img src='/img/loading.gif'></pre>
+{{ datatable('queueTable', ['Interface','Type','Value']) }}
+<button id='commitConfigButton'>Commit changes</button>
+</div>
+</div>
+</div>
+
+
+</div>
+
+{% endblock %}
