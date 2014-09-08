@@ -28,7 +28,7 @@ sudo pip install ciscoconfparse
 Installation
 ------------
 
-1. Install the opennaas-dc-gui repository in your webservers document root.
+1. Clone the opennaas-dc-gui repository somewhere on your server.
 2. adjust the settings.py file to match your environment
 3. execute the app using ./opennaas_dc_gui.py
 
