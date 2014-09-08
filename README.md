@@ -30,7 +30,7 @@ Installation
 
 1. Clone the opennaas-dc-gui repository somewhere on your server.
 2. adjust the settings.py file to match your environment.
-3. execute the app using ./opennaas_dc_gui.py
+3. execute the app using ./opennaas_dc_gui.wsgi
 4. Adjust rpc.py in ncclient module. (see below here)
 
 #### Issues using Cisco netconf ####
