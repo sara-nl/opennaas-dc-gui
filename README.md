@@ -29,8 +29,23 @@ Installation
 ------------
 
 1. Clone the opennaas-dc-gui repository somewhere on your server.
-2. adjust the settings.py file to match your environment
+2. adjust the settings.py file to match your environment.
 3. execute the app using ./opennaas_dc_gui.py
+4. Adjust rpc.py in ncclient module. (see below here)
+
+#### Issues using Cisco netconf ####
+
+the ncclient library has issues handling correct XML namespace for Cisco.
+This means that when sending an RPC call, the RPC call is not ended correctly, and the session stays open.
+Manual patch in operations/rpc.py to fix this:
+
+<pre>
+# line 181-182:
+# - if tag != qualify("rpc-reply"):
+# -     return
+# + # if tag != qualify("rpc-reply"):
+# + #    return
+</pre>
 
 Current functionality
 ---------------------
