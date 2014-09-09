@@ -39,12 +39,20 @@ def getQueue(resource_name, url, opennaas_user, opennaas_pwd):
 	queue = r.text[1:-1].replace(" ","").split(",")
 	return json.dumps(queue)
 
-def executeQueue(resource_name, url, opennaas_user, opennaas_pwd):
-	r = requests.post("%srouter/%s/queue/execute" % (url, resource_name), auth=(opennaas_user, opennaas_pwd))
+def executeQueue(resources, url, opennaas_user, opennaas_pwd):
+	if isinstance(resources, list):
+		for resource in resources:
+			r = requests.post("%srouter/%s/queue/execute" % (url, resource), auth=(opennaas_user, opennaas_pwd))
+	else:
+		r = requests.post("%srouter/%s/queue/execute" % (url, resources), auth=(opennaas_user, opennaas_pwd))
 	return json.dumps(r.text)
 
-def clearQueue(resource_name, url, opennaas_user, opennaas_pwd):
-	r = requests.post("%srouter/%s/queue/clear" % (url, resource_name), auth=(opennaas_user, opennaas_pwd))
+def clearQueue(resources, url, opennaas_user, opennaas_pwd):
+	if isinstance(resources, list):
+		for resource in resources:
+			r = requests.post("%srouter/%s/queue/clear" % (url, resource), auth=(opennaas_user, opennaas_pwd))
+	else:
+		r = requests.post("%srouter/%s/queue/clear" % (url, resources), auth=(opennaas_user, opennaas_pwd))	
 	return json.dumps(r.text)
 
 def removeQueueItems(resource_name, resources, url,opennaas_user,opennaas_pwd):

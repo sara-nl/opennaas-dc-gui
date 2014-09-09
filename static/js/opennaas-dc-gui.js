@@ -1,4 +1,4 @@
-var ResourceTable, ChassisTable, QueueTable;
+var ResourceTable, ChassisTable, QueueTable, GlobalQueueTable;
 
 $(document).ready(function()
 {  
@@ -20,6 +20,14 @@ $(document).ready(function()
         //$('#QueueActionSelect').selectmenu(); doesnt work yet
         $('#QueueActionButton').click(QueueActionButtonClick); // assign function to click event
     }
+    if ($('body').hasClass('global_queue'))
+    {
+        $('#GlobalQueueActionSelect').selectmenu(); // init fancy select menu
+        $('#GlobalQueueTable').hide(); //hide table during ajax call
+        $('#GlobalQueueCommitIndicator').hide(); 
+        $.get("/resources/getresources", callback_GetGlobalQueue); //get resources using ajax
+        $('#GlobalQueueActionButton').click(GlobalQueueButtonClick); 
+    }
 });
 
 ///
@@ -29,7 +37,7 @@ $(document).ready(function()
 
 // initializes the Resource table
 function init_ResourceTable(columnArray, VLANarray) {
-    ResourceTable = $('#ResourceTable').dataTable(buildTableParameters([10,10,10,10,10,10], { "data": columnArray }));
+    ResourceTable = $('#ResourceTable').dataTable(buildTableParameters([10,10,10,10,10,10], { "data": columnArray  , "aaSorting": [[ 1, "desc" ]]}));
     $('#ResourceTable').DataTable().columns.adjust().draw();
     return ResourceTable;
 }
@@ -72,6 +80,51 @@ function callback_GetResources(data,status)
     ResourceTable = init_ResourceTable(columnArray);
 };
 
+///
+/// Global queue functions
+///
+
+function callback_GetGlobalQueue(data,status) {
+    var columnArray =[];
+    if (GlobalQueueTable) GlobalQueueTable.fnDestroy(); // destroy the current Queue table
+    var index = 0;
+    for (var i=0; i < Object.keys(data).length; i++) 
+    {
+       if (data[i].queue[0].length > 0) {    
+            for (var q = 0; q < data[i].queue.length; q++)
+            {
+                columnArray[index] = [index, data[i].name, q, data[i].queue[q], "<input type='checkbox' value='" + data[i].name + "'>" ];
+                index ++;
+            }         
+       }    
+    }  
+    GlobalQueueTable = $('#GlobalQueueTable').dataTable(buildTableParameters([10,10,10,10,10], { "data": columnArray, "aaSorting": [[ 1, "desc" ]] }));
+    $("#GlobalQueueTable").show();
+    $('#GlobalQueueCommitIndicator').hide(); 
+}
+
+function GlobalQueueButtonClick()
+{
+    $('#GlobalQueueCommitIndicator').show(); 
+     
+    // Make array of all resources in the table
+    var resources = [];
+    jQuery.each( $("#GlobalQueueTable tr"), function( i, val ) { 
+
+        resources.push($("#GlobalQueueTable tr:eq(" + i + ") td:eq(0)").text());
+    });
+    resources = unique(resources);   //make array unique
+    $.ajax({
+        type: "POST",
+        url: "/queue/" + $('#GlobalQueueActionSelect option:selected').val() ,
+        data: JSON.stringify(resources),
+        dataType: 'json',
+        error: function( jqXHR, textStatus, errorThrown ){
+            alert("jsoncall failed! reason:" + textStatus);
+        },
+        success: $.get("/resources/getresources", callback_GetGlobalQueue)
+    });
+}
 
 
 ///
@@ -154,6 +207,7 @@ function callback_GetQueue(data,status) {
             columnArray[i] = [i, $('#resourcename').attr('value'), i, data[i], "<input type='checkbox' value='" + data[i] + "'>" ];
         }  
     }    
+    
     QueueTable = init_QueueTable(columnArray); 
     $("#QueueTable").show();
     $('#QueueCommitIndicator').hide(); 

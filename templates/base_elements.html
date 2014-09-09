@@ -28,7 +28,7 @@
  <h2 class="ui-widget-header header"><span>Basic Items</span></h2>
     <div class="ui-widget-content box_content"><table border=0 width=188>
       <tr><td><div class="link_with_tag"><a href="/resources/" >Show Resources</a></div></td></tr>
-      <tr><td><div class="link_with_tag"><a href="resource_queue.php?resourcename=_all" >Show Queue</a></div></td></tr>
+      <tr><td><div class="link_with_tag"><a href="/queue/" >Show Queues</a></div></td></tr>
         <tr><td><div class="link_with_tag"><a href="overview_vlan.php" >Show VLANs</a></div></td></tr>
       </table></div>
 
@@ -52,7 +52,7 @@
 <thead>
 <tr>
 {% for item in columns %}
-<td>{{ item }}</td>
+<th>{{ item }}</th>
 {% endfor %}
 </tr>
 </thead>

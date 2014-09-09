@@ -89,5 +89,20 @@ def opennaas_resource_router_queue(resource_name = None):
   if action == "clear": response = clearQueue(resource_name, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
   return Response( response, mimetype='application/json') 
 
+@wsgi_app.route('/queue/', methods=['GET'])
+def opennaas_queue(action = None):
+  if action == None: return render_template('opennaas_queue.html')
+
+
+@wsgi_app.route('/queue/<action>', methods=['GET', 'POST'])
+def opennaas_queueaction(action = None):
+  if action == None: return render_template('opennaas_queue.html')
+  if request.method == "POST": resources = request.get_json(force = True)
+  if action == "execute": response = executeQueue(resources, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
+  if action == "clear": response = clearQueue(resources, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
+  return Response( response, mimetype='application/json') 
+
+
+
 
 

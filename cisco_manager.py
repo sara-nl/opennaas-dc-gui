@@ -153,7 +153,6 @@ def buildJSONStatusInfo(RPCdata):
         interfaceDict[index].update({'protocolstatus': line[45:54].strip() })
         interfaceDict[index].update({'description': line[54:].strip() })
         
-
         index = index + 1
     
     begin = RPCdata.find('<item><show>mac address-table</show><response>\n')
