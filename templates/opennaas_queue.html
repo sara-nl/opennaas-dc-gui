@@ -1,0 +1,19 @@
+{% extends "base_elements.html" %}
+{% block scripts %}<script src="/js/opennaas-dc-gui.js"></script>{% endblock %} 
+{% block bodyclass %}class='global_queue'{% endblock %}
+{% block maincontent %}
+<div id="maincontent">
+
+<h1>OpenNaaS Queues</h1>
+{{ datatable('GlobalQueueTable', ['ID','Resource','Queue ID','Entry description','Action']) }}
+<select id='GlobalQueueActionSelect'>
+<option value="">-- Choose Action --</option>
+<option value="execute">Execute queue</option>
+<option value="remove">Remove selected queue entries</option>
+<option value="clear">Clear Queue</option>
+</select>
+
+<button id='GlobalQueueActionButton'>Go</button>
+<pre id='GlobalQueueCommitIndicator'>Processing ... <img src='/img/loading.gif'></pre>
+</div>
+{% endblock %}
