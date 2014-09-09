@@ -8,16 +8,44 @@ This interface is written as an example to demonstrate the capabilities of OpenN
 Prerequisites
 -------------
 
-This applications uses PHP and requires a working instance of OpenNaaS 0.28<br>
+This applications uses Python and requires a working instance of OpenNaaS 0.28<br>
 To download and install OpenNaaS, visit http://opennaas.org/downloads/ <br>
 Or alternatively the github repository https://github.com/dana-i2cat/opennaas/ <br>
-It also requires the php5-curl package.<br>
+It can run as a standalone WSGI app.
+It requires a number of packages:<br>
+
+<pre>
+sudo apt-get install python-paramiko
+sudo apt-get install libxml2-dev
+sudo apt-get install libxslt1-dev
+sudo apt-get install python-pip python-dev build-essential 
+sudo apt-get install python-pip
+sudo pip install Flask
+sudo pip install ncclient==0.3.2
+sudo pip install ciscoconfparse
+</pre>
 
 Installation
 ------------
 
-1. Install the opennaas-dc-gui repository in your webservers document root.
-2. adjust the settings.php file to have the $REST_URL and $BASE_URL reflect the location of your web and/or OpenNaaS servers.
+1. Clone the opennaas-dc-gui repository somewhere on your server.
+2. adjust the settings.py file to match your environment.
+3. execute the app using ./opennaas_dc_gui.wsgi
+4. Adjust rpc.py in ncclient module. (see below here)
+
+#### Issues using Cisco netconf ####
+
+the ncclient library has issues handling correct XML namespace for Cisco.
+This means that when sending an RPC call, the RPC call is not ended correctly, and the session stays open.
+Manual patch in operations/rpc.py to fix this:
+
+<pre>
+# line 181-182:
+# - if tag != qualify("rpc-reply"):
+# -     return
+# + # if tag != qualify("rpc-reply"):
+# + #    return
+</pre>
 
 Current functionality
 ---------------------
