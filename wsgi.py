@@ -1,7 +1,9 @@
 import sys
 import settings
-from cisco_manager import getCiscoStatus, buildJSONStatusInfo, getCiscoConfig, getCiscoConfigFromFile, buildJSONConfigInfo, parseCiscoConfigChangeRPC, editCiscoConfig
-from opennaas_manager import getResources, updateResources, getResource, getRouterInterfaces, addToQueue, getQueue, executeQueue , clearQueue, removeQueueItems
+from cisco_manager import *
+# getCiscoStatus, buildJSONStatusInfo, getCiscoConfig, getCiscoConfigFromFile, buildJSONConfigInfo, parseCiscoConfigChangeRPC, editCiscoConfig
+from opennaas_manager import *
+#getResources, updateResources, getResource, getRouterInterfaces, addToQueue, getQueue, executeQueue , clearQueue, removeQueueItems
 from flask import Flask, request, render_template, Response, Blueprint
 app = Flask(__name__)
 
@@ -77,6 +79,11 @@ def opennaas_resource_router_getinterfaces(name = None):
   interfaces = getRouterInterfaces(name, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
   return Response( interfaces, mimetype='application/json') 
 
+@wsgi_app.route('/router/<name>/getcontext', methods=['POST', 'GET'])
+def opennaas_resource_router_getcontext(name = None):
+  data = getContext(name, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
+  return Response( data, mimetype='application/json') 
+
 @wsgi_app.route('/router/<resource_name>/queue', methods=['GET', 'POST'])
 def opennaas_resource_router_queue(resource_name = None):
   action = request.args.get('action')
@@ -87,12 +94,11 @@ def opennaas_resource_router_queue(resource_name = None):
   if action == "execute": response = executeQueue(resource_name, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
   if action == "remove": response = removeQueueItems(resource_name, resources, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
   if action == "clear": response = clearQueue(resource_name, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
-  return Response( response, mimetype='application/json') 
+  return Response( response, mimetype='application/json')
 
 @wsgi_app.route('/queue/', methods=['GET'])
 def opennaas_queue(action = None):
   if action == None: return render_template('opennaas_queue.html')
-
 
 @wsgi_app.route('/queue/<action>', methods=['GET', 'POST'])
 def opennaas_queueaction(action = None):
@@ -100,7 +106,7 @@ def opennaas_queueaction(action = None):
   if request.method == "POST": resources = request.get_json(force = True)
   if action == "execute": response = executeQueue(resources, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
   if action == "clear": response = clearQueue(resources, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
-  return Response( response, mimetype='application/json') 
+  return Response( response, mimetype='application/json')
 
 
 

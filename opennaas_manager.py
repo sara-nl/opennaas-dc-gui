@@ -25,6 +25,7 @@ import requests
 from collections import defaultdict
 import xml.etree.ElementTree as ET
 import json, urllib, re
+import settings
 
 def getResourceName(resource_id, url, opennaas_user, opennaas_pwd):
 	r = requests.get("%sresources/%s/name" % (url, resource_id), auth=(opennaas_user, opennaas_pwd))
@@ -54,6 +55,20 @@ def clearQueue(resources, url, opennaas_user, opennaas_pwd):
 	else:
 		r = requests.post("%srouter/%s/queue/clear" % (url, resources), auth=(opennaas_user, opennaas_pwd))	
 	return json.dumps(r.text)
+
+def getContext(resource_name, url, opennaas_user, opennaas_pwd):
+	context = dict()
+	r = requests.get("%srouter/%s/protocolSessionManager/context" % (url, resource_name), auth=(opennaas_user, opennaas_pwd))
+
+	tree = ET.fromstring(r.text)
+	key =""
+	value =""
+	for elem in tree.iter():
+		if elem.tag == "key": key = elem.text
+		if elem.tag == "value": value = elem.text
+		if len(key) != 0: context.update( { key:value })
+	
+	return json.dumps(context)
 
 def removeQueueItems(resource_name, resources, url,opennaas_user,opennaas_pwd):
 	"""
@@ -199,7 +214,7 @@ def addToQueue(resourcename, interface, type, value, url,opennaas_user,opennaas_
 
 def main(): 
 	print ""
-
+	#print getContext("switch1",settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
 if __name__ == "__main__":
     main()
 

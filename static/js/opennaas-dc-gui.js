@@ -16,7 +16,9 @@ $(document).ready(function()
     {
         $('#tabs').tabs();   // Initialize tabs
         $.get("/resources/getresource/" + $('#resourcename').attr('value'), callback_GetResource); // get resource config using Ajax call
+        $.get("/router/" + $('#resourcename').attr('value') + "/getcontext", callback_GetContext); // get resource queue using Ajax call
         $.get("/router/" + $('#resourcename').attr('value') + "/queue?action=get", callback_GetQueue); // get resource queue using Ajax call
+   
         //$('#QueueActionSelect').selectmenu(); doesnt work yet
         $('#QueueActionButton').click(QueueActionButtonClick); // assign function to click event
     }
@@ -181,6 +183,14 @@ function callback_GetResource(data,status)
     $.get("/router/" + $('#resourcename').attr('value') + "/getinterfaces", callback_GetInterfaces);
 };
 
+function  callback_GetContext(data,status) 
+{
+    console.log(data)
+    for (var propt in data) {
+        
+        $('#' + propt.replace(".", "_") ).text(data[propt]);
+    }
+}
 function callback_GetInterfaces(data,status)
 {
     var columnArray =[];
