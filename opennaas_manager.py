@@ -27,6 +27,28 @@ import xml.etree.ElementTree as ET
 import json, urllib, re
 import settings
 
+def etree_to_dict(t):
+	"""Function which converts a ElementTree XML object to a python Dictionary."""
+
+	d = {t.tag: {} if t.attrib else None}
+	children = list(t)
+	if children:
+		dd = defaultdict(list)
+		for dc in map(etree_to_dict, children):
+			for k, v in dc.iteritems():
+				dd[k].append(v)
+		d = {t.tag: {k:v[0] if len(v) == 1 else v for k, v in dd.iteritems()}}
+	if t.attrib:
+		d[t.tag].update(('@' + k, v) for k, v in t.attrib.iteritems())
+	if t.text:
+		text = t.text.strip()
+		if children or t.attrib:
+			if text:
+				d[t.tag]['#text'] = text
+		else:
+			d[t.tag] = text
+	return d
+
 def getResourceName(resource_id, url, opennaas_user, opennaas_pwd):
 	r = requests.get("%sresources/%s/name" % (url, resource_id), auth=(opennaas_user, opennaas_pwd))
 	return r.text
@@ -59,15 +81,10 @@ def clearQueue(resources, url, opennaas_user, opennaas_pwd):
 def getContext(resource_name, url, opennaas_user, opennaas_pwd):
 	context = dict()
 	r = requests.get("%srouter/%s/protocolSessionManager/context" % (url, resource_name), auth=(opennaas_user, opennaas_pwd))
-
-	tree = ET.fromstring(r.text)
-	key =""
-	value =""
-	for elem in tree.iter():
-		if elem.tag == "key": key = elem.text
-		if elem.tag == "value": value = elem.text
-		if len(key) != 0: context.update( { key:value })
-	
+	data =  etree_to_dict( ET.fromstring(r.text) )	
+	data = data['protocolSessionContexts']['protocolSessionContext']['sessionParameters']['entry']			
+	for i in data:
+		context.update( {i.get('key'): i.get('value').get('#text') })
 	return json.dumps(context)
 
 def removeQueueItems(resource_name, resources, url,opennaas_user,opennaas_pwd):
@@ -84,38 +101,21 @@ def getResource(resource_id, url, opennaas_user, opennaas_pwd):
 	if re.match('[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}',resource_id) == None:
 		resource_id =  getResourceID(resource_id, url, opennaas_user, opennaas_pwd)
 	
-	resource = dict()
-	resource.update({"id" : resource_id})
-	capabilities = ""
 	r = requests.get("%sresources/%s" % (url, resource_id), auth=(opennaas_user, opennaas_pwd))
-	
-	resourceInfoTree = ET.fromstring(r.text)
-						
-	for elem in resourceInfoTree.iter():	
-				
-		if elem.tag == "name": resource.update({'name' :elem.text})
-		if elem.tag == "type": resource.update({'type' :elem.text})
-		if elem.tag == "state": resource.update({'status' :elem.text})
-		if elem.tag == "capability": capabilities = capabilities + " " + elem.text
-	resource.update({'capabilities' :capabilities.strip()})
+	data =  etree_to_dict( ET.fromstring(r.text) )				
 			
-	queue = getQueue(resource.get('name'), url, opennaas_user, opennaas_pwd)
-	resource.update({'queue' : json.loads(queue)})
+	queue = getQueue(data['resourceInfo'].get('name'), url, opennaas_user, opennaas_pwd)
+	data['resourceInfo'].update({'queue' : json.loads(queue)})
 	
-	return json.dumps(resource)
+	return json.dumps(data['resourceInfo'])
 
 def getResources(url, opennaas_user, opennaas_pwd):
-	resources = defaultdict(dict)
+	resources = list()
 	
 	r = requests.get(url + "resources/", auth=(opennaas_user, opennaas_pwd))
-	
-	index = 0
-	tree = ET.fromstring(r.text)
-	for elem in tree.iter():
-		if elem.tag == "resource":
-			resources[index] = json.loads(getResource(elem.text, url, opennaas_user, opennaas_pwd))
-			index = index + 1
-
+	data =  etree_to_dict( ET.fromstring(r.text) )	
+	for i in data['resources']['resource']:
+		resources.append(json.loads(getResource(i, url, opennaas_user, opennaas_pwd)))
 	return json.dumps(resources)
 
 def updateResources(action, resources, url,opennaas_user,opennaas_pwd):
@@ -130,33 +130,34 @@ def getResourceStatus(resourcename, url, opennaas_user, opennaas_pwd):
 	return r.text
 
 def getRouterInterfaces(resourcename, url , opennaas_user, opennaas_pwd):
-	interfaces = defaultdict(dict)
-	
-	index = 0
+	interfaces = list()
+
 	r = requests.get("%srouter/%s/chassis/interfaces" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
-	tree = ET.fromstring(r.text)
-	for elem in tree.iter():
-		
-		if elem.tag == "interface":
-			ip= ""
-			interfaces[index].update({'description': ""})
-			interfaces[index].update({'ip': ""})
-			ri = requests.get("%srouter/%s/chassis/interfaces/info?interfaceName=%s" % (url, resourcename, elem.text), auth=(opennaas_user, opennaas_pwd))
-			ri_tree = ET.fromstring(ri.text)
-			for ri_elem in ri_tree.iter():
-				if ri_elem.tag == "name": interfaces[index].update({'name' : ri_elem.text})
-				if ri_elem.tag == "description": interfaces[index].update({'description' : ri_elem.text})
-				if ri_elem.tag == "state": interfaces[index].update({'state' : ri_elem.text})
-			rip = requests.get("%srouter/%s/ip/interfaces/addresses?interface=%s" % (url, resourcename, elem.text), auth=(opennaas_user, opennaas_pwd))
-			
-			rip_tree = ET.fromstring(rip.text)
-			for rip_elem in rip_tree.iter():
-				if rip_elem.tag == "ipAddress": ip = ip + " " + rip_elem.text
-				
-			interfaces[index].update({'ip' :ip.strip()})
-			index = index + 1
+	data = etree_to_dict( ET.fromstring(r.text) )	
+	data = data['{opennaas.api}interfaces']['interface']
 	
+	for i in data:
+		ri = requests.get("%srouter/%s/chassis/interfaces/info?interfaceName=%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
+		ifInfo = etree_to_dict( ET.fromstring(ri.text) )	
+		ifInfo = ifInfo['{opennaas.api}interfaceInfo']
+		
+		rip = requests.get("%srouter/%s/ip/interfaces/addresses?interface=%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
+		ipInfo = etree_to_dict( ET.fromstring(rip.text) )
+		if ipInfo['{opennaas.api}ipAddresses'] != None : ifInfo.update( ipInfo['{opennaas.api}ipAddresses'] )
+		else: ifInfo.update( {'ipAddress' : ""} )
+		
+		if (ifInfo.get('description') == None): ifInfo['description'] = ''
+		
+		interfaces.append(ifInfo)
+
 	return json.dumps(interfaces)
+
+def getRouterAggregates(resourcename, url , opennaas_user, opennaas_pwd):
+	r = requests.get("%srouter/%s/linkaggregation/" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
+	tree = ET.fromstring(r.text)
+	data = etree_to_dict(tree)
+
+	return json.dumps(data)
 
 def getRouterVLANs(resourcename, url , opennaas_user, opennaas_pwd):
 	interfaces = defaultdict(dict)
@@ -164,38 +165,88 @@ def getRouterVLANs(resourcename, url , opennaas_user, opennaas_pwd):
 	vlaninterfaces = []
 	
 	# Build dictionary of all vlans with their attached interfaces
-	index = 0
 	r = requests.get("%srouter/%s/vlanbridge" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
-	tree = ET.fromstring(r.text)
-	for elem in tree.iter():
-		if elem.tag == "domainName":
-			vlanBridges[index].update({'domainName': elem.text})
-			rv = requests.get("%srouter/%s/vlanbridge/%s" % (url, resourcename, elem.text), auth=(opennaas_user, opennaas_pwd))
-			rv_tree = ET.fromstring(rv.text)
-				
-			for rv_elem in rv_tree.iter():
-				if rv_elem.tag == "vlanid": vlanBridges[index].update({'vlanid': rv_elem.text})
-				if rv_elem.tag == "description": vlanBridges[index].update({'description': rv_elem.text})
-				if rv_elem.tag == "interfaceName": vlaninterfaces.append(rv_elem.text)
-			vlanBridges[index].update({'interfaceName': vlaninterfaces})	
-			vlaninterfaces = []
-			index = index + 1
+	vlans = etree_to_dict( ET.fromstring(r.text) )
+	vlans = vlans['{opennaas.api}bridgeDomains']['domainName']
+	for i in vlans :
+		rv = requests.get("%srouter/%s/vlanbridge/%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
+		vlanDetails = etree_to_dict( ET.fromstring(rv.text) )
+		vlanBridges.update({ i : vlanDetails['{opennaas.api}bridgeDomain']})
 
-	index = 0
 	r = requests.get("%srouter/%s/chassis/interfaces" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
-	tree = ET.fromstring(r.text)
-	for elem in tree.iter():
-		if elem.tag == "interface": 
-			interfaces[index].update({'name': elem.text})
-			rv = requests.get("%srouter/%s/vlanbridge/vlanoptions?iface=%s" % (url, resourcename, elem.text), auth=(opennaas_user, opennaas_pwd))
-			rv_tree = ET.fromstring(rv.text)
-			for rv_elem in rv_tree.iter():
-				print rv_elem.text
-				if rv_elem.text == "native-vlan-id":
-					print "bla"
-			index = index + 1
-	
-	return json.dumps(interfaces)
+	ifdata = etree_to_dict( ET.fromstring(r.text) )
+	ifdata = ifdata['{opennaas.api}interfaces']['interface']
+	for i in ifdata:
+		print i
+		rv = requests.get("%srouter/%s/vlanbridge/vlanoptions?iface=%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
+		vlanOptions = etree_to_dict( ET.fromstring(rv.text) )
+		print vlanOptions
+		"""rv_tree = ET.fromstring(rv.text)
+		for rv_elem in rv_tree.iter():
+			print rv_elem.text
+			if rv_elem.text == "native-vlan-id":
+				print "bla"
+		index = index + 1
+		"""
+
+def getNetworkOverview(url , opennaas_user, opennaas_pwd):
+	domains = defaultdict();
+	routers = json.loads(getResources(url, opennaas_user, opennaas_pwd))
+
+	for router in routers:
+		if router['type'] == 'router':
+			print "%srouter/%s/vlanbridge" % (url, router['name'])
+			r = requests.get("%srouter/%s/vlanbridge" % (url, router['name']), auth=(opennaas_user, opennaas_pwd))
+			vlans = etree_to_dict( ET.fromstring(r.text) )
+			#print vlans
+			vlans = vlans['{opennaas.api}bridgeDomains']['domainName']
+			
+			for vlan in vlans:
+				print "%srouter/%s/vlanbridge/%s" % (url, router['name'],vlan)
+				r = requests.get("%srouter/%s/vlanbridge/%s" % (url, router['name'],vlan), auth=(opennaas_user, opennaas_pwd))
+				domain = etree_to_dict( ET.fromstring(r.text) )
+				print domain
+				domain = domain['{opennaas.api}bridgeDomain']
+				domain.update( { 'resources' : [router['name']]})
+
+				if vlan not in domains.keys():
+					domains.update( { vlan : domain })
+				else:
+					resources = domains[vlan]['resources']
+					resources.append(router['name'])
+					domains[vlan].update({ 'resources' : resources })
+		
+	return json.dumps(domains)
+
+def getTopology(resourcename , url, topo_auth_string):
+	r = requests.get("%snetwork/%s/topology" % (url, resourcename), headers = {'Accept' : 'application/xml', 'Authorization' : 'Basic ' + topo_auth_string })
+	topo = etree_to_dict( ET.fromstring(r.text) )
+	return json.dumps(topo)
+
+def createLinkAggregation(resourcename, interface, type, value, url,opennaas_user,opennaas_pwd):
+	payload = """<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:aggregatedInterface xmlns:ns2="opennaas.api">
+  <id>ae2</id>
+  <interfaces>
+    <interface>ge-0/0/3</interface>
+    <interface>ge-0/0/4</interface>
+  </interfaces>
+  <aggregationOptions>
+    <entry>
+      <key>link-speed</key>
+      <value>1g</value>
+    </entry>
+    <entry>
+      <key>minimum-links</key>
+      <value>1</value>
+    </entry>
+  </aggregationOptions>
+</ns2:aggregatedInterface>"""
+	r = requests.post("%srouter/%s/linkaggregation" % (url, resourcename),  headers = {'Content-Type': 'application/xml'} ,  data = payload, auth=(opennaas_user, opennaas_pwd))
+	print r.status_code
+	print r.headers
+	print r.text
+	return vlanBridges
 	
 def addToQueue(resourcename, interface, type, value, url,opennaas_user,opennaas_pwd):
 
@@ -213,8 +264,10 @@ def addToQueue(resourcename, interface, type, value, url,opennaas_user,opennaas_
 	return json.dumps(r.text)
 
 def main(): 
+	#print getRouterInterfaces('switch1',settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
+	#print getTopology("fakeNet",settings.opennaas_url,settings.topo_auth_string)
 	print ""
-	#print getContext("switch1",settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
+	
 if __name__ == "__main__":
     main()
 

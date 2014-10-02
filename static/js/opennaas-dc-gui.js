@@ -1,5 +1,5 @@
-var ResourceTable, ChassisTable, QueueTable, GlobalQueueTable;
-
+var ResourceTable, ChassisTable, QueueTable, GlobalQueueTable, NetworkTable;
+var dialog;
 $(document).ready(function()
 {  
     // Initialize HTML elements for resources page
@@ -18,9 +18,11 @@ $(document).ready(function()
         $.get("/resources/getresource/" + $('#resourcename').attr('value'), callback_GetResource); // get resource config using Ajax call
         $.get("/router/" + $('#resourcename').attr('value') + "/getcontext", callback_GetContext); // get resource queue using Ajax call
         $.get("/router/" + $('#resourcename').attr('value') + "/queue?action=get", callback_GetQueue); // get resource queue using Ajax call
-   
+        $( "#port_aggr_dialog" ).hide();
         //$('#QueueActionSelect').selectmenu(); doesnt work yet
+        $('#ChassisActionButton').click(ChassisActionButtonClick);
         $('#QueueActionButton').click(QueueActionButtonClick); // assign function to click event
+
     }
     if ($('body').hasClass('global_queue'))
     {
@@ -29,6 +31,15 @@ $(document).ready(function()
         $('#GlobalQueueCommitIndicator').hide(); 
         $.get("/resources/getresources", callback_GetGlobalQueue); //get resources using ajax
         $('#GlobalQueueActionButton').click(GlobalQueueButtonClick); 
+    }
+    if ($('body').hasClass('networks'))
+    {     
+        $.get("/networks/getnetworks" , callback_GetNetworks); // get Network info using Ajax call
+        $('#NetworksActionButton').click(ChassisActionButtonClick);
+    }
+    if ($('body').hasClass('topology'))
+    {     
+        $.get("/topology/fakeNet/gettopology" , callback_GetTopology); // get Network info using Ajax call
     }
 });
 
@@ -69,14 +80,25 @@ function callback_CommitResourceAction(data,status)
 function callback_GetResources(data,status) 
 {
     var columnArray =[];
-    console.log(data);
+
     if (ResourceTable) ResourceTable.fnDestroy(); // destroy the current Resource table
     for (var i=0; i < Object.keys(data).length; i++) 
-    {     
-        columnArray[i] = [i, 
-            "<a href='/router/" + data[i].name + "'>" + 
-            data[i].name + "</a>", data[i].type , data[i].capabilities , data[i].status, "<input type='checkbox' value='" + data[i].id + "'>" ];  
-    }  
+    {   
+        if (data[i].type == "router")
+        {
+            if (data[i].capabilities != null) 
+            {
+                var capabilities = data[i].capabilities.capability;
+            }
+            else 
+            {
+                var capabilities = "Unknown";
+            }
+            columnArray[i] = [i, 
+                "<a href='/router/" + data[i].name + "'>" + 
+                data[i].name + "</a>", data[i].type , capabilities, data[i].state, "<input type='checkbox' value='" + data[i].resourceId + "'>" ];  
+        }
+    }
     $("#ResourceTable").show();  
     $('#ResourcesCommitIndicator').hide(); 
     ResourceTable = init_ResourceTable(columnArray);
@@ -92,11 +114,14 @@ function callback_GetGlobalQueue(data,status) {
     var index = 0;
     for (var i=0; i < Object.keys(data).length; i++) 
     {
-       if (data[i].queue[0].length > 0) {    
-            for (var q = 0; q < data[i].queue.length; q++)
-            {
-                columnArray[index] = [index, data[i].name, q, data[i].queue[q], "<input type='checkbox' value='" + data[i].name + "'>" ];
-                index ++;
+       if (data[i].queue[0].length > 0) {  
+            if (data[i].type == "router")
+            {  
+                for (var q = 0; q < data[i].queue.length; q++)
+                {
+                    columnArray[index] = [index, data[i].name, q, data[i].queue[q], "<input type='checkbox' value='" + data[i].name + "'>" ];
+                    index ++;
+                }
             }         
        }    
     }  
@@ -174,7 +199,7 @@ function callback_GetResource(data,status)
 {
     $('#resourcelabel').text(data.name);
 
-    if (data.status != 'ACTIVE') {
+    if (data.state != 'ACTIVE') {
         alert("resource is not ACTIVE!");
         $('#tabs').tabs( "option", "disabled", [0, 1, 2] );
         $('#tabs').tabs( "option", "active", 3 );  
@@ -185,21 +210,36 @@ function callback_GetResource(data,status)
 
 function  callback_GetContext(data,status) 
 {
-    console.log(data)
-    for (var propt in data) {
-        
+    for (var propt in data) {      
         $('#' + propt.replace(".", "_") ).text(data[propt]);
     }
 }
 function callback_GetInterfaces(data,status)
 {
     var columnArray =[];
+    console.log(data);
+
     if (ChassisTable) ChassisTable.fnDestroy(); // destroy the current Resource table
     for (var i=0; i < Object.keys(data).length; i++) 
     {     
-        columnArray[i] = [i, data[i].name , data[i].description, data[i].ip , data[i].ip, data[i].state, "<input type='checkbox' value='" + data[i].name + "'>" ];
-
-    }  
+        // parse IP addresses
+        var ipv4 ="";
+        var ipv6 ="";
+        if (typeof(data[i].ipAddress) == 'object')  // check if there are multiple ip addresses in data[i].ipAddress
+        {
+        for (var ip=0; ip <data[i].ipAddress.length; ip++)
+            {
+                if (data[i].ipAddress[ip].indexOf(".") != -1) { ipv4 = ipv4 + data[i].ipAddress[ip] + " "; }
+                if (data[i].ipAddress[ip].indexOf(":") != -1) { ipv6 = ipv6 + data[i].ipAddress[ip] + " "; }    
+            }
+        }
+        else 
+        {
+            if (data[i].ipAddress.indexOf(".") != -1) { ipv4 = data[i].ipAddress}
+            if (data[i].ipAddress.indexOf(":") != -1) { ipv6 = data[i].ipAddress} 
+        }
+        columnArray[i] = [i, data[i].name , data[i].description, ipv4 , ipv6, data[i].state, "<input type='checkbox' value='" + data[i].name + "'>" ];
+    }; 
     $("#ChassisTable").show();
     $('#ChassisCommitIndicator').hide(); 
     ChassisTable = init_ChassisTable(columnArray);   
@@ -246,6 +286,28 @@ function QueueActionButtonClick()
     });
 }
 
+function ChassisActionButtonClick()
+{
+    
+    dialog = $( "#port_aggr_dialog" ).dialog({
+        autoOpen: false,
+        height: 300,
+        width: 350,
+        modal: true,
+        buttons: {
+            "Create the aggregate": function() { alert ('add aggr1') },
+            Cancel: function() {
+            dialog.dialog( "close" );
+        }
+        },
+        close: function() {
+            form[ 0 ].reset();
+            allFields.removeClass( "ui-state-error" );
+        }
+    });
+    dialog.dialog( "open" );
+}
+
 function addToQueue(queueItem,cellpos) {
    
     // get interface name using the cellpos position values of the selected cell
@@ -276,5 +338,42 @@ function callback_CommitQueueAction(data,status)
     $.get("/resources/getresource/" + $('#resourcename').attr('value'), callback_GetResource);
 }
 
+///////////////////////
+/// Networks overview functions
+///////////////////////
 
+function callback_GetNetworks(data,status) 
+{
+    console.log(data);
+    
+    var columnArray =[];
 
+    if (NetworkTable) NetworkTable.fnDestroy(); // destroy the current Resource table
+    
+    var i=0;
+    for (key in data) 
+    {   
+        console.log(key,data[key]);
+        columnArray[i] = [i,data[key].domainName, data[key].description, data[key].vlanid, data[key].resources, " ", " "," "];
+        i++;
+        //   "<a href='/router/" + data[i].name + "'>" + 
+        //    data[i].name + "</a>", data[i].type , capabilities, data[i].state, "<input type='checkbox' value='" + data[i].resourceId + "'>" ];  
+    }
+ 
+    $("#NetworkTable").show();  
+    $('#NetworksCommitIndicator').hide(); 
+    NetworkTable = init_NetworkTable(columnArray);
+    
+};
+
+function init_NetworkTable(columnArray) {
+    NetworkTable = $('#NetworkTable').dataTable(buildTableParameters([150,150,10,10,10,10,10,10], { "data": columnArray }));
+    $('#NetworkTable').DataTable().columns.adjust().draw();
+    return NetworkTable;
+}
+
+function callback_GetTopology(data,status) 
+{
+    console.log(data);
+    
+};

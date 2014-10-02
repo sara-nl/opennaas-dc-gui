@@ -1,0 +1,20 @@
+{% extends "base_elements.html" %}
+{% block scripts %}<script src="/js/opennaas-dc-gui.js"></script>{% endblock %} 
+{% block bodyclass %}class='networks'{% endblock %}
+{% block maincontent %}
+<div id="maincontent">
+
+<h1>Networks</h1>
+{{ datatable('NetworkTable', ['ID','Bridge Domain ID','VLAN description','VLAN ID','Configured on', 'L3 Network', 'Routed by', 'c'] ) }}
+<select id='NetworksActionSelect'>
+<option value="">-- Choose Action --</option>
+<option value="start">start</option>
+<option value="stop">stop</option>
+<option value="forcestop">force stop</option>
+<option value="remove">remove</option>
+</select>
+
+<button id='NetworksActionButton'>Go</button>
+<pre id='NetworksCommitIndicator'>Processing ... <img src='/img/loading.gif'></pre>
+</div>
+{% endblock %}

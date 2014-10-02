@@ -13,9 +13,39 @@
 <li><a href="#tabs-4">Resource Info</a></li>
 </ul>
 <div id="tabs-1">
+
+<div id="port_aggr_dialog" title="Create new Aggregate">
+	<form>
+			 <style>
+dialog_fieldset.label, dialog_fieldset.input, dialog_fieldset.select { display:block; }
+input.text { margin-bottom:12px; width:95%; padding: .4em; }
+input.select { margin-bottom:12px; width:95%; padding: .4em; }
+fieldset { padding:0; border:0; margin-top:25px; }
+
+</style>
+		<fieldset id='dialog_fieldset'>
+			<label for="name">Name</label>
+			<input type="select" name="name" id="name" value="" class="text ui-widget-content ui-corner-all">
+			<label for="interfaces">Used interfaces</label>
+			<select name="interfaces" id="interfaces" value="" class="text ui-widget-content ui-corner-all">
+				<option value="">-- Choose Action --</option>
+				<option value="">-- Choose Action --</option>
+			</select>
+			<label for="link_speed">Link speed</label>
+			<input type="text" name="link_speed" id="link_speed"  class="text ui-widget-content ui-corner-all">
+			<!-- Allow form submission with keyboard without duplicating the dialog button -->
+			<input type="submit" tabindex="-1" style="position:absolute; top:-1000px">
+		</fieldset>
+	</form>
+</div>
 <pre id='ChassisCommitIndicator'>Processing ... <img src='/img/loading.gif'></pre>
 {{ datatable('ChassisTable', ['ID','Interface name','Interface description','IPv4','IPv6','Status','Action'] ) }}
-<button id='ChassisCommitButton'>Go</button>
+<br>
+<select id='ChassisActionSelect'>
+<option value="">-- Choose Action --</option>
+<option value="create_port_aggr">Create new Port aggregation</option>
+</select>
+<button id='ChassisActionButton'>Go</button>
 </div>
 <div id="tabs-2">
 {{ datatable('QueueTable', ['ID','Resource','Queue ID','Entry description','Action']) }}

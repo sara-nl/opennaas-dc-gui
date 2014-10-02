@@ -108,7 +108,22 @@ def opennaas_queueaction(action = None):
   if action == "clear": response = clearQueue(resources, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
   return Response( response, mimetype='application/json')
 
+@wsgi_app.route('/networks/', methods=['GET'])
+def opennaas_networks(action = None):
+  if action == None: return render_template('opennaas_networks.html')
 
+@wsgi_app.route('/networks/getnetworks', methods=['GET'])
+def opennaas_getnetworks():
+  networks = getNetworkOverview(settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
+  return Response( networks, mimetype='application/json')
 
+@wsgi_app.route('/topology/', methods=['GET'])
+def opennaas_topology(action = None):
+  if action == None: return render_template('opennaas_topology.html')
+
+@wsgi_app.route('/topology/<resource_name>/gettopology', methods=['GET'])
+def opennaas_gettopology(resource_name = None):
+  topology = getTopology(resource_name,settings.opennaas_url, settings.topo_auth_string)
+  return Response( topology, mimetype='application/json')
 
 

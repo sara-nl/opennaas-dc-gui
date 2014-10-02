@@ -7,6 +7,9 @@ opennaas_url = 'http://yourhost:8888/opennaas/'
 opennaas_user = 'user'
 opennaas_pwd = 'pass'
 
+# Topology capability authentication string
+topo_auth_string = 'pass'
+
 ### Settings for Cisco local resources
 
 # logging for ncclient output
