@@ -27,7 +27,7 @@ fieldset { padding:0; border:0; margin-top:25px; }
 			<label for="name">Name</label>
 			<input type="select" name="name" id="name" value="" class="text ui-widget-content ui-corner-all">
 			<label for="interfaces">Used interfaces</label>
-			<select name="interfaces" id="interfaces" value="" class="text ui-widget-content ui-corner-all">
+			<select name="interfaces" id="interfaces" value="" class="text ui-widget-content ui-corner-all" >
 				<option value="">-- Choose Action --</option>
 				<option value="">-- Choose Action --</option>
 			</select>
@@ -38,6 +38,33 @@ fieldset { padding:0; border:0; margin-top:25px; }
 		</fieldset>
 	</form>
 </div>
+
+<div id="port_show_aggr_dialog" title="Aggregate Info ">
+	<form>
+			 <style>
+dialog_show_fieldset.label, dialog_show_fieldset.input, dialog_show_fieldset.select { display:block; }
+input.text { margin-bottom:12px; width:95%; padding: .4em; }
+input.select { margin-bottom:12px; width:95%; padding: .4em; }
+fieldset { padding:0; border:0; margin-top:25px; }
+
+</style>
+		<fieldset id='dialog_show_fieldset'>
+			<label for="name">Name</label>
+			<input type="text" name="aggr_name" id="aggr_name" value="" class="text ui-widget-content ui-corner-all"  readonly>
+			<label for="interfaces">Used interfaces</label><br>
+			<select MULTIPLE name="aggr_interfaces" id="aggr_interfaces" value="" class="text ui-widget-content ui-corner-all"  readonly="readonly">
+			</select><br>
+			<label for="link_speed">Link speed</label>
+			<div id="link_speed"></div>
+			
+			<input type="text" name="aggr_link_speed" id="aggr_link_speed"  class="text ui-widget-content ui-corner-all" readonly>
+			<label for="link_speed">Aggregation options</label>
+			<input type="text" name="aggr_options" id="aggr_options"  class="text ui-widget-content ui-corner-all" readonly>
+		</fieldset>
+	</form>
+</div>
+
+
 <pre id='ChassisCommitIndicator'>Processing ... <img src='/img/loading.gif'></pre>
 {{ datatable('ChassisTable', ['ID','Interface name','Interface description','IPv4','IPv6','Status','Action'] ) }}
 <br>

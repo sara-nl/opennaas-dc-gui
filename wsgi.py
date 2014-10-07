@@ -84,6 +84,11 @@ def opennaas_resource_router_getcontext(name = None):
   data = getContext(name, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
   return Response( data, mimetype='application/json') 
 
+@wsgi_app.route('/router/<name>/getaggr/<interface>', methods=['POST', 'GET'])
+def opennaas_resource_router_getaggr(name = None, interface = None):
+  data = getRouterAggregate(name, interface, settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
+  return Response( data, mimetype='application/json') 
+
 @wsgi_app.route('/router/<resource_name>/queue', methods=['GET', 'POST'])
 def opennaas_resource_router_queue(resource_name = None):
   action = request.args.get('action')
@@ -121,9 +126,15 @@ def opennaas_getnetworks():
 def opennaas_topology(action = None):
   if action == None: return render_template('opennaas_topology.html')
 
+
+@wsgi_app.route('/topology/<resource_name>/buildtopology', methods=['GET'])
+def opennaas_buildtopology(resource_name = None):
+  topology = buildTopology(resource_name,settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
+  return Response( {"success": "true"}, mimetype='application/json')
+
 @wsgi_app.route('/topology/<resource_name>/gettopology', methods=['GET'])
 def opennaas_gettopology(resource_name = None):
-  topology = getTopology(resource_name,settings.opennaas_url, settings.topo_auth_string)
+  topology = getTopology(resource_name,settings.opennaas_url, settings.opennaas_user, settings.opennaas_pwd)
   return Response( topology, mimetype='application/json')
 
 

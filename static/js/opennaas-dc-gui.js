@@ -19,6 +19,7 @@ $(document).ready(function()
         $.get("/router/" + $('#resourcename').attr('value') + "/getcontext", callback_GetContext); // get resource queue using Ajax call
         $.get("/router/" + $('#resourcename').attr('value') + "/queue?action=get", callback_GetQueue); // get resource queue using Ajax call
         $( "#port_aggr_dialog" ).hide();
+        $( "#port_show_aggr_dialog" ).hide();
         //$('#QueueActionSelect').selectmenu(); doesnt work yet
         $('#ChassisActionButton').click(ChassisActionButtonClick);
         $('#QueueActionButton').click(QueueActionButtonClick); // assign function to click event
@@ -39,7 +40,9 @@ $(document).ready(function()
     }
     if ($('body').hasClass('topology'))
     {     
-        $.get("/topology/fakeNet/gettopology" , callback_GetTopology); // get Network info using Ajax call
+        $('#TopologyIndicator').hide();
+        $('#TopologyActionButton').click(TopologyActionButtonClick);
+        $.get("/topology/net1/gettopology" , callback_GetTopology); // get Network info using Ajax call
     }
 });
 
@@ -159,7 +162,8 @@ function GlobalQueueButtonClick()
 ///
 
 function init_ChassisTable(columnArray) {
-    ChassisTable = $('#ChassisTable').dataTable(buildTableParameters([10,10,200,10,10,10,10], { "data": columnArray })).makeEditable( {
+    ChassisTable = $('#ChassisTable').dataTable(buildTableParameters([10,10,200,10,10,10,10], { "data": columnArray, "placeholder" : "..." })).makeEditable( {
+        "placeholder" : "...", 
         "aoColumns": [
             null,
             {
@@ -191,6 +195,11 @@ function init_ChassisTable(columnArray) {
             },
         ]        
     });
+    $('td', ChassisTable.fnGetNodes()).editable(function(value, settings) {
+    return(value);
+    }, {
+    placeholder : '&amp;nbsp; '
+}); 
     $('#ChassisTable').DataTable().columns.adjust().draw();
     return ChassisTable;
 }
@@ -217,7 +226,7 @@ function  callback_GetContext(data,status)
 function callback_GetInterfaces(data,status)
 {
     var columnArray =[];
-    console.log(data);
+
 
     if (ChassisTable) ChassisTable.fnDestroy(); // destroy the current Resource table
     for (var i=0; i < Object.keys(data).length; i++) 
@@ -238,7 +247,14 @@ function callback_GetInterfaces(data,status)
             if (data[i].ipAddress.indexOf(".") != -1) { ipv4 = data[i].ipAddress}
             if (data[i].ipAddress.indexOf(":") != -1) { ipv6 = data[i].ipAddress} 
         }
-        columnArray[i] = [i, data[i].name , data[i].description, ipv4 , ipv6, data[i].state, "<input type='checkbox' value='" + data[i].name + "'>" ];
+        name = data[i].name;
+        if (data[i].isAggr == true) 
+        {
+            name = '<a href="javascript:;" onclick="getAggregate(\'' +data[i].name + '\');">' + data[i].name + "</a>";
+            console.log(name)
+        }
+     
+        columnArray[i] = [i, name , data[i].description, ipv4 , ipv6, data[i].state, "<input type='checkbox' value='" + data[i].name + "'>" ];
     }; 
     $("#ChassisTable").show();
     $('#ChassisCommitIndicator').hide(); 
@@ -308,6 +324,55 @@ function ChassisActionButtonClick()
     dialog.dialog( "open" );
 }
 
+function getAggregate(aggr)
+{
+    aggr = aggr.replace(".0","");
+    $//.get("/router/" + $('#resourcename').attr('value') + "/getinterfaces", callback_GetAggregate);
+    $.ajax({
+        type: "GET",
+        url: "/router/" + $('#resourcename').attr('value') + "/getaggr/" + aggr,
+        error: callback_GetAggregate,
+        success: callback_GetAggregate
+    });
+}
+
+function callback_GetAggregate(data)
+{
+    console.log(data);
+    dialog = $( "#port_show_aggr_dialog" ).dialog({
+        autoOpen: false,
+        height: 400,
+        width: 350,
+        modal: true,
+        buttons: {
+            Cancel: function() {
+            dialog.dialog( "close" );
+        }
+        },
+        close: function() {
+            allFields.removeClass( "ui-state-error" );
+        }
+    });
+    dialog.dialog( "open" );
+
+    $('#aggr_name').val(data.id);
+    var interfaces ="";
+    for (var i=0; i < Object.keys(data.interfaces.interface).length; i++) {
+        $('#aggr_interfaces').append($("<option></option>") .attr("value",data.interfaces.interface[i]) .text(data.interfaces.interface[i]));  
+        interfaces = interfaces +  data.interfaces.interface[i] + " ";
+    }
+    $('#aggr_link_speed').val("1g");
+  
+    options = "";
+    //for (var i=0; i < Object.keys(data.aggregationOptions.entry).length; i++) {
+        options = options + data.aggregationOptions.entry.key + " " + data.aggregationOptions.entry.value + " ";
+    //};
+    $('#aggr_options').val(options);
+         
+        
+        
+}
+
 function addToQueue(queueItem,cellpos) {
    
     // get interface name using the cellpos position values of the selected cell
@@ -375,5 +440,139 @@ function init_NetworkTable(columnArray) {
 function callback_GetTopology(data,status) 
 {
     console.log(data);
-    
+    //if there is data, init canvas, else nothing
+    if (data.devices != null ) 
+    {
+        if (Object.keys(data.devices.device).length > 0) 
+        {
+            init_Canvas(data);
+        }
+    }   
 };
+
+function buildCircle(x,y,radius)
+{
+      var circle = new Kinetic.Circle({
+          x: x,
+          y: y,
+          radius: radius,
+          stroke: '#666',
+          fill: '#ddd',
+          strokeWidth: 2,
+          draggable: true
+        }); 
+      return circle;
+}
+
+function buildSwitchShape(x,y, description) 
+{
+    var layer = new Kinetic.Layer();
+    var imageObj = new Image(120,75);
+    imageObj.src = '/img/switch.png';
+    var image = new Kinetic.Image({
+        x: x,
+        y: y,
+        image: imageObj,
+        width: 120,
+        height: 75
+    });
+    var label = new Kinetic.Text({ 
+        text: description,
+        x: x, 
+        y: y-20,
+        fontSize: 18,
+        fontFamily: 'Calibri',
+        fill: 'black'
+    });
+   var group = new Kinetic.Group();
+    group.add(image);
+    group.add(label);
+ 
+    
+    return group;
+}
+
+function buildAnchors(x,y, radius, anchors_per_side) 
+{
+    var layer = new Kinetic.Layer();
+    var workable_radius = radius - 4;
+    //Horizontal Anchors
+    for (var i = 0; i < anchors_per_side ; i++ ) 
+    {
+        var circle = buildCircle(x - workable_radius +( (workable_radius  / anchors_per_side) * i *2), y - workable_radius, 2);
+        layer.add(circle);
+        var circle = buildCircle(x - workable_radius +( (workable_radius  / anchors_per_side) * i *2), y + workable_radius, 2);
+        layer.add(circle);
+    };
+    // Vertical Anchors
+    for (var i = 0; i < anchors_per_side ; i++ ) 
+    {
+        if ((i != 0) & (i != anchors_per_side)) {
+            var circle = buildCircle(x - workable_radius , y - workable_radius + ((workable_radius  / anchors_per_side) * i *2), 2);
+            layer.add(circle);
+           var circle = buildCircle(x + workable_radius , y - workable_radius + ((workable_radius  / anchors_per_side) * i *2), 2);
+             layer.add(circle);
+        }
+    };
+    return layer;
+}
+
+function TopologyActionButtonClick()
+{
+    $('#TopologyIndicator').show(); 
+    $.ajax({
+        type: "GET",
+        url: "/topology/net1/buildtopology",
+        error: callback_BuildTopology,
+        success: callback_BuildTopology
+    });
+}
+
+function callback_BuildTopology(data,status) 
+{
+    $('#TopologyIndicator').hide(); 
+    
+    $.get("/topology/net1/gettopology" , callback_GetTopology); // get Network info using Ajax call
+}
+
+function init_Canvas(data) 
+{
+    var stage = new Kinetic.Stage({
+        container: 'container',
+        width: 800,
+        height: 400,
+        draggable: false
+    });
+    anchors = [];
+    var layer = new Kinetic.Layer();
+    var xindex=100;
+    for (var i=0; i < Object.keys(data.devices.device).length; i++) 
+    {
+        console.log(data.devices.device[i].id);
+        layer.add(buildSwitchShape(xindex,100,data.devices.device[i].id));
+        xindex=xindex+300;
+    }
+   
+
+    //var line = new Kinetic.Line({ x: circle.getX(), y: circle.getY(), other stuff });
+    //console.log(switch1.offsetX());
+    /*var line = new Kinetic.Line({
+        points: [switch1.getX(), switch1.getY(), switch2.getX(), switch2.getY()],
+        stroke: 'red',
+        strokeWidth: 5,
+        lineCap: 'round',
+        lineJoin: 'round'
+      });  
+    */
+   
+
+   
+   // layer.add(line);
+
+     stage.add(layer);
+    // add the layer to the stage
+    //stage.add(buildAnchors(100,100, 20, 5));
+
+
+
+}

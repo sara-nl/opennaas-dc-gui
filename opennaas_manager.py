@@ -135,12 +135,14 @@ def getRouterInterfaces(resourcename, url , opennaas_user, opennaas_pwd):
 	r = requests.get("%srouter/%s/chassis/interfaces" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
 	data = etree_to_dict( ET.fromstring(r.text) )	
 	data = data['{opennaas.api}interfaces']['interface']
-	
+	aggregates = json.loads(getRouterAggregates(resourcename, url , opennaas_user, opennaas_pwd))
+
 	for i in data:
 		ri = requests.get("%srouter/%s/chassis/interfaces/info?interfaceName=%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
 		ifInfo = etree_to_dict( ET.fromstring(ri.text) )	
 		ifInfo = ifInfo['{opennaas.api}interfaceInfo']
-		
+		ifInfo.update( {'isAggr' : ifInfo['name'][:-2] in aggregates['{opennaas.api}interfaces']['interface'] })
+				
 		rip = requests.get("%srouter/%s/ip/interfaces/addresses?interface=%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
 		ipInfo = etree_to_dict( ET.fromstring(rip.text) )
 		if ipInfo['{opennaas.api}ipAddresses'] != None : ifInfo.update( ipInfo['{opennaas.api}ipAddresses'] )
@@ -150,6 +152,7 @@ def getRouterInterfaces(resourcename, url , opennaas_user, opennaas_pwd):
 		
 		interfaces.append(ifInfo)
 
+		
 	return json.dumps(interfaces)
 
 def getRouterAggregates(resourcename, url , opennaas_user, opennaas_pwd):
@@ -158,6 +161,14 @@ def getRouterAggregates(resourcename, url , opennaas_user, opennaas_pwd):
 	data = etree_to_dict(tree)
 
 	return json.dumps(data)
+
+def getRouterAggregate(resourcename, interfacename, url , opennaas_user, opennaas_pwd):
+	r = requests.get("%srouter/%s/linkaggregation/%s" % (url, resourcename,interfacename), auth=(opennaas_user, opennaas_pwd))
+	tree = ET.fromstring(r.text)
+	data = etree_to_dict(tree)
+	data = data['{opennaas.api}aggregatedInterface']
+	return json.dumps(data)
+
 
 def getRouterVLANs(resourcename, url , opennaas_user, opennaas_pwd):
 	interfaces = defaultdict(dict)
@@ -208,7 +219,8 @@ def getNetworkOverview(url , opennaas_user, opennaas_pwd):
 				print domain
 				domain = domain['{opennaas.api}bridgeDomain']
 				domain.update( { 'resources' : [router['name']]})
-
+				if 'description' not in domain.keys(): domain.update({ 'description' : "" })
+				print domain['description']
 				if vlan not in domains.keys():
 					domains.update( { vlan : domain })
 				else:
@@ -218,9 +230,19 @@ def getNetworkOverview(url , opennaas_user, opennaas_pwd):
 		
 	return json.dumps(domains)
 
-def getTopology(resourcename , url, topo_auth_string):
-	r = requests.get("%snetwork/%s/topology" % (url, resourcename), headers = {'Accept' : 'application/xml', 'Authorization' : 'Basic ' + topo_auth_string })
+def buildTopology(resourcename, url,  opennaas_user, opennaas_pwd):
+	routers = json.loads(getResources(url, opennaas_user, opennaas_pwd))
+	for router in routers:
+		if router['type'] == 'router':
+			print router
+			r = requests.post("%snetwork/%s/topology/resource" % (url, resourcename), data = str(router['resourceId']) , auth=(opennaas_user, opennaas_pwd), headers = {'Content-Type': 'application/xml','Accept' : 'application/xml'})
+			print r.status_code
+			print r.text
+
+def getTopology(resourcename , url, opennaas_user, opennaas_pwd):
+	r = requests.get("%snetwork/%s/topology" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
 	topo = etree_to_dict( ET.fromstring(r.text) )
+	topo = topo['{opennaas.api}network-topology']
 	return json.dumps(topo)
 
 def createLinkAggregation(resourcename, interface, type, value, url,opennaas_user,opennaas_pwd):
@@ -265,7 +287,8 @@ def addToQueue(resourcename, interface, type, value, url,opennaas_user,opennaas_
 
 def main(): 
 	#print getRouterInterfaces('switch1',settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
-	#print getTopology("fakeNet",settings.opennaas_url,settings.topo_auth_string)
+	#print buildTopology("net1",settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
+	print getRouterAggregate("switch1","ae0",settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
 	print ""
 	
 if __name__ == "__main__":
