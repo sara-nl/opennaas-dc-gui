@@ -409,10 +409,7 @@ function callback_CommitQueueAction(data,status)
 
 function callback_GetNetworks(data,status) 
 {
-    console.log(data);
-    
     var columnArray =[];
-
     if (NetworkTable) NetworkTable.fnDestroy(); // destroy the current Resource table
     
     var i=0;
@@ -439,7 +436,6 @@ function init_NetworkTable(columnArray) {
 
 function callback_GetTopology(data,status) 
 {
-    console.log(data);
     //if there is data, init canvas, else nothing
     if (data.devices != null ) 
     {
@@ -470,6 +466,7 @@ function buildSwitchShape(x,y, description)
     var imageObj = new Image(120,75);
     imageObj.src = '/img/switch.png';
     var image = new Kinetic.Image({
+        name: description,
         x: x,
         y: y,
         image: imageObj,
@@ -535,44 +532,76 @@ function callback_BuildTopology(data,status)
     $.get("/topology/net1/gettopology" , callback_GetTopology); // get Network info using Ajax call
 }
 
+function get_resourcename_from_resourceid(resourceId,data)
+{   
+    for (var i=0; i < Object.keys(data.resources).length; i++ )
+        if (data.resources[i].resourceId == resourceId) return data.resources[i].name;
+}
 function init_Canvas(data) 
 {
+    // Create new Canvas
     var stage = new Kinetic.Stage({
         container: 'container',
         width: 800,
         height: 400,
         draggable: false
     });
-    anchors = [];
     var layer = new Kinetic.Layer();
+    // Text information
+    var text = new Kinetic.Text({
+        x: 10,
+        y: 10,
+        fontFamily: 'Calibri',
+        fontSize: 18,
+        text: '',
+        fill: 'black'
+      });
+
+    layer.add(text);
+    var switchInfo = [];
     var xindex=100;
+    // Read all the devices from the topology info and create images
     for (var i=0; i < Object.keys(data.devices.device).length; i++) 
     {
-        console.log(data.devices.device[i].id);
-        layer.add(buildSwitchShape(xindex,100,data.devices.device[i].id));
+        resourcename  = get_resourcename_from_resourceid(data.devices.device[i].resourceID,data)
+        switchShape = buildSwitchShape(xindex,100, resourcename);
+        switchInfo[i] = ({ x: xindex, y:100 , name: resourcename, deviceid : data.devices.device[i].id});
+        layer.add(switchShape);
+        switchShape.on('click', function(e) { location.href="/router/" + e.target.name(); });
+        switchShape.on('mouseover', function() {  document.body.style.cursor = 'pointer'; });
+        switchShape.on('mouseout', function() {  document.body.style.cursor = 'default'; });
         xindex=xindex+300;
     }
-   
+  
+    // Read all links from the topology info and create lines
+    for (var i=0; i < Object.keys(data.links.link).length; i++) {
 
-    //var line = new Kinetic.Line({ x: circle.getX(), y: circle.getY(), other stuff });
-    //console.log(switch1.offsetX());
-    /*var line = new Kinetic.Line({
-        points: [switch1.getX(), switch1.getY(), switch2.getX(), switch2.getY()],
-        stroke: 'red',
-        strokeWidth: 5,
-        lineCap: 'round',
-        lineJoin: 'round'
-      });  
-    */
-   
+        from = getSwitchInfo_from_deviceid(data.links.link[i].from.deviceId, switchInfo);
+        to = getSwitchInfo_from_deviceid(data.links.link[i].to.deviceId, switchInfo);
+        description = from.name + ": " + data.links.link[i].from.id + " -> " + to.name + ": " + data.links.link[i].to.id;
+        var line = new Kinetic.Line({
+            dash: [10,0,10,0],
+            points: [from.x+60, from.y+38+(i*5), to.x+60, to.y+38+(i*5)],
+            name: description,
+            stroke: 'black',
+            strokeWidth: 3,
+            lineCap: 'round',
+            lineJoin: 'round'
+        });  
+        
+        layer.add(line);
+        line.on('mouseover', function() { this.stroke('orange'); this.dashEnabled(true); text.setText(this.name()); layer.draw(); });
+        line.on('mouseout', function() { this.stroke('black');  text.setText(""); layer.draw(); });
+        line.moveToBottom();
+        layer.draw();
+    }
 
-   
-   // layer.add(line);
-
-     stage.add(layer);
-    // add the layer to the stage
-    //stage.add(buildAnchors(100,100, 20, 5));
-
-
-
+    stage.add(layer);
 }
+
+function getSwitchInfo_from_deviceid(deviceid, switchInfo)
+{
+    for (var i=0 ; i< switchInfo.length; i ++) 
+        if (switchInfo[i].deviceid == deviceid) return switchInfo[i];
+}
+

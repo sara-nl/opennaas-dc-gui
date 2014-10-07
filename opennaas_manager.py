@@ -242,7 +242,12 @@ def buildTopology(resourcename, url,  opennaas_user, opennaas_pwd):
 def getTopology(resourcename , url, opennaas_user, opennaas_pwd):
 	r = requests.get("%snetwork/%s/topology" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
 	topo = etree_to_dict( ET.fromstring(r.text) )
+	#print r.text
 	topo = topo['{opennaas.api}network-topology']
+
+	resources = json.loads(getResources(url, opennaas_user, opennaas_pwd))
+	topo.update({'resources' : resources})
+
 	return json.dumps(topo)
 
 def createLinkAggregation(resourcename, interface, type, value, url,opennaas_user,opennaas_pwd):
@@ -276,7 +281,7 @@ def addToQueue(resourcename, interface, type, value, url,opennaas_user,opennaas_
 	if type == "description": url = "%srouter/%s/ip/interfaces/description?interface=%s" % (url, resourcename, interface)
 	if type == "ipv4address": url = "%srouter/%s/ip/interfaces/addresses/ipv4?interface=%s" % (url, resourcename, interface)
 	if type == "ipv6address": url = "%srouter/%s/ip/interfaces/addresses/ipv6?interface=%s" % (url, resourcename, interface)
-	if type == "status": url = "%srouter/%s/chassis/interfaces/status/%s?ifaceName=%s" % (url, resourcename, value, interface)
+	if type == "status": url = "%srouter/%s/chassis/interfaces/status/%s?ifaceName=%s" % (url, resourcename, value, interface[:-2])
 
 	if type == "status":
 		r = requests.put(url, auth=(opennaas_user, opennaas_pwd), headers = {"content-type":"application/xml"})
@@ -287,8 +292,8 @@ def addToQueue(resourcename, interface, type, value, url,opennaas_user,opennaas_
 
 def main(): 
 	#print getRouterInterfaces('switch1',settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
-	#print buildTopology("net1",settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
-	print getRouterAggregate("switch1","ae0",settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
+	print getTopology("net1",settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
+	#print getRouterAggregate("switch1","ae0",settings.opennaas_url,settings.opennaas_user, settings.opennaas_pwd)
 	print ""
 	
 if __name__ == "__main__":
