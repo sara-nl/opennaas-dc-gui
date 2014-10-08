@@ -21,6 +21,7 @@ sudo apt-get install libxslt1-dev
 sudo apt-get install python-pip python-dev build-essential 
 sudo apt-get install python-pip
 sudo pip install Flask
+sudo pip install requests
 sudo pip install ncclient==0.3.2
 sudo pip install ciscoconfparse
 </pre>
