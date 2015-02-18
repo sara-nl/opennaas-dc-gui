@@ -50,19 +50,23 @@ def etree_to_dict(t):
 	return d
 
 def getResourceName(resource_id, url, opennaas_user, opennaas_pwd):
+	"""Returns the name of a resource, using the resource ID."""
 	r = requests.get("%sresources/%s/name" % (url, resource_id), auth=(opennaas_user, opennaas_pwd))
 	return r.text
 
 def getResourceID(resource_name, url, opennaas_user, opennaas_pwd):
+	"""Returns the ID of a resource, using the resource name."""
 	r = requests.get("%sresources/type/router/name/%s" % (url, resource_name), auth=(opennaas_user, opennaas_pwd))
 	return r.text
 
 def getQueue(resource_name, url, opennaas_user, opennaas_pwd):
+	"""Returns the Queue of a resource, in JSON format."""
 	r = requests.get("%srouter/%s/queue/getActionsId" % (url, resource_name), auth=(opennaas_user, opennaas_pwd))
 	queue = r.text[1:-1].replace(" ","").split(",")
 	return json.dumps(queue)
 
 def executeQueue(resources, url, opennaas_user, opennaas_pwd):
+	"""Executes the queues of all resources in a list of resourcenames."""
 	if isinstance(resources, list):
 		for resource in resources:
 			r = requests.post("%srouter/%s/queue/execute" % (url, resource), auth=(opennaas_user, opennaas_pwd))
@@ -71,6 +75,7 @@ def executeQueue(resources, url, opennaas_user, opennaas_pwd):
 	return json.dumps(r.text)
 
 def clearQueue(resources, url, opennaas_user, opennaas_pwd):
+	"""Clears the queues of all resources in a list of resourcenames."""
 	if isinstance(resources, list):
 		for resource in resources:
 			r = requests.post("%srouter/%s/queue/clear" % (url, resource), auth=(opennaas_user, opennaas_pwd))
@@ -120,9 +125,8 @@ def getResources(url, opennaas_user, opennaas_pwd):
 
 def updateResources(action, resources, url,opennaas_user,opennaas_pwd):
 	for resource in resources:
-		print "the resource:" + resource
 		r = requests.put("%sresources/%s/status/%s" % ( url, resource, action), auth=(opennaas_user, opennaas_pwd))
-		print r.text
+		
 
 def getResourceStatus(resourcename, url, opennaas_user, opennaas_pwd):
 	id = getResourceID(resourcename , url, opennaas_user, opennaas_pwd)
@@ -132,16 +136,25 @@ def getResourceStatus(resourcename, url, opennaas_user, opennaas_pwd):
 def getRouterInterfaces(resourcename, url , opennaas_user, opennaas_pwd):
 	interfaces = list()
 
+	# Get list of interfaces and convert to dict
 	r = requests.get("%srouter/%s/chassis/interfaces" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
 	data = etree_to_dict( ET.fromstring(r.text) )	
 	data = data['{opennaas.api}interfaces']['interface']
+
+	# Get list of aggregates 
 	aggregates = json.loads(getRouterAggregates(resourcename, url , opennaas_user, opennaas_pwd))
 
 	for i in data:
+		#Get detailed interface info per interface
 		ri = requests.get("%srouter/%s/chassis/interfaces/info?interfaceName=%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
 		ifInfo = etree_to_dict( ET.fromstring(ri.text) )	
+		
+		# Remove prepending '{opennaas.api}interfaceInfo' key
 		ifInfo = ifInfo['{opennaas.api}interfaceInfo']
-		ifInfo.update( {'isAggr' : ifInfo['name'][:-2] in aggregates['{opennaas.api}interfaces']['interface'] })
+
+		# If there are aggregates, add the info 
+		if aggregates['{opennaas.api}interfaces'] != None:
+			ifInfo.update( {'isAggr' : ifInfo['name'][:-2] in aggregates['{opennaas.api}interfaces']['interface'] })
 				
 		rip = requests.get("%srouter/%s/ip/interfaces/addresses?interface=%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
 		ipInfo = etree_to_dict( ET.fromstring(rip.text) )
@@ -156,10 +169,13 @@ def getRouterInterfaces(resourcename, url , opennaas_user, opennaas_pwd):
 	return json.dumps(interfaces)
 
 def getRouterAggregates(resourcename, url , opennaas_user, opennaas_pwd):
+	deviceInfo = json.loads(getResource(resourcename, url, opennaas_user, opennaas_pwd))
+	if 'linkaggregation' not in deviceInfo['capabilities']['capability']:
+		return json.dumps({'{opennaas.api}interfaces': None})
+
 	r = requests.get("%srouter/%s/linkaggregation/" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
 	tree = ET.fromstring(r.text)
 	data = etree_to_dict(tree)
-
 	return json.dumps(data)
 
 def getRouterAggregate(resourcename, interfacename, url , opennaas_user, opennaas_pwd):
@@ -169,11 +185,10 @@ def getRouterAggregate(resourcename, interfacename, url , opennaas_user, opennaa
 	data = data['{opennaas.api}aggregatedInterface']
 	return json.dumps(data)
 
-
 def getRouterVLANs(resourcename, url , opennaas_user, opennaas_pwd):
 	interfaces = defaultdict(dict)
 	vlanBridges = defaultdict(dict)
-	vlaninterfaces = []
+	vlaninterfaces = [] 
 	
 	# Build dictionary of all vlans with their attached interfaces
 	r = requests.get("%srouter/%s/vlanbridge" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
@@ -188,7 +203,6 @@ def getRouterVLANs(resourcename, url , opennaas_user, opennaas_pwd):
 	ifdata = etree_to_dict( ET.fromstring(r.text) )
 	ifdata = ifdata['{opennaas.api}interfaces']['interface']
 	for i in ifdata:
-		print i
 		rv = requests.get("%srouter/%s/vlanbridge/vlanoptions?iface=%s" % (url, resourcename, i), auth=(opennaas_user, opennaas_pwd))
 		vlanOptions = etree_to_dict( ET.fromstring(rv.text) )
 		print vlanOptions
@@ -206,21 +220,16 @@ def getNetworkOverview(url , opennaas_user, opennaas_pwd):
 
 	for router in routers:
 		if router['type'] == 'router':
-			print "%srouter/%s/vlanbridge" % (url, router['name'])
 			r = requests.get("%srouter/%s/vlanbridge" % (url, router['name']), auth=(opennaas_user, opennaas_pwd))
 			vlans = etree_to_dict( ET.fromstring(r.text) )
-			#print vlans
 			vlans = vlans['{opennaas.api}bridgeDomains']['domainName']
 			
 			for vlan in vlans:
-				print "%srouter/%s/vlanbridge/%s" % (url, router['name'],vlan)
 				r = requests.get("%srouter/%s/vlanbridge/%s" % (url, router['name'],vlan), auth=(opennaas_user, opennaas_pwd))
 				domain = etree_to_dict( ET.fromstring(r.text) )
-				print domain
 				domain = domain['{opennaas.api}bridgeDomain']
 				domain.update( { 'resources' : [router['name']]})
 				if 'description' not in domain.keys(): domain.update({ 'description' : "" })
-				print domain['description']
 				if vlan not in domains.keys():
 					domains.update( { vlan : domain })
 				else:
@@ -233,16 +242,12 @@ def getNetworkOverview(url , opennaas_user, opennaas_pwd):
 def buildTopology(resourcename, url,  opennaas_user, opennaas_pwd):
 	routers = json.loads(getResources(url, opennaas_user, opennaas_pwd))
 	for router in routers:
-		if router['type'] == 'router':
-			print router
+		if (router['type'] == 'router') and (router['state'] == 'ACTIVE') and ('topologydiscovery' in router['capabilities']['capability']):
 			r = requests.post("%snetwork/%s/topology/resource" % (url, resourcename), data = str(router['resourceId']) , auth=(opennaas_user, opennaas_pwd), headers = {'Content-Type': 'application/xml','Accept' : 'application/xml'})
-			print r.status_code
-			print r.text
 
 def getTopology(resourcename , url, opennaas_user, opennaas_pwd):
 	r = requests.get("%snetwork/%s/topology" % (url, resourcename), auth=(opennaas_user, opennaas_pwd))
 	topo = etree_to_dict( ET.fromstring(r.text) )
-	#print r.text
 	topo = topo['{opennaas.api}network-topology']
 
 	resources = json.loads(getResources(url, opennaas_user, opennaas_pwd))
@@ -277,7 +282,6 @@ def createLinkAggregation(resourcename, interface, type, value, url,opennaas_use
 	
 def addToQueue(resourcename, interface, type, value, url,opennaas_user,opennaas_pwd):
 
-	print interface,type,value
 	if type == "description": url = "%srouter/%s/ip/interfaces/description?interface=%s" % (url, resourcename, interface)
 	if type == "ipv4address": url = "%srouter/%s/ip/interfaces/addresses/ipv4?interface=%s" % (url, resourcename, interface)
 	if type == "ipv6address": url = "%srouter/%s/ip/interfaces/addresses/ipv6?interface=%s" % (url, resourcename, interface)
@@ -287,7 +291,6 @@ def addToQueue(resourcename, interface, type, value, url,opennaas_user,opennaas_
 		r = requests.put(url, auth=(opennaas_user, opennaas_pwd), headers = {"content-type":"application/xml"})
 	else:	
 		r = requests.post(url, data = value, auth=(opennaas_user, opennaas_pwd), headers = {"content-type":"application/xml"})
-	print r
 	return json.dumps(r.text)
 
 def main(): 

@@ -40,7 +40,8 @@ $(document).ready(function()
     }
     if ($('body').hasClass('topology'))
     {     
-        $('#TopologyIndicator').hide();
+        $('#switchImg').hide(); 
+        $('#TopologyIndicator').show();
         $('#TopologyActionButton').click(TopologyActionButtonClick);
         $.get("/topology/net1/gettopology" , callback_GetTopology); // get Network info using Ajax call
     }
@@ -97,9 +98,12 @@ function callback_GetResources(data,status)
             {
                 var capabilities = "Unknown";
             }
-            columnArray[i] = [i, 
+            state = data[i].state;
+            if (state == 'INITIALIZED') state = "<img src='/img/grey.png' width=12px height=12px> INITIALIZED";
+            if (state == 'ACTIVE') state = "<img src='/img/green.png' width=12px height=12px> ACTIVE";
+            columnArray.push( [i, 
                 "<a href='/router/" + data[i].name + "'>" + 
-                data[i].name + "</a>", data[i].type , capabilities, data[i].state, "<input type='checkbox' value='" + data[i].resourceId + "'>" ];  
+                data[i].name + "</a>", data[i].type , capabilities, state, "<input type='checkbox' value='" + data[i].resourceId + "'>" ]);  
         }
     }
     $("#ResourceTable").show();  
@@ -162,8 +166,8 @@ function GlobalQueueButtonClick()
 ///
 
 function init_ChassisTable(columnArray) {
-    ChassisTable = $('#ChassisTable').dataTable(buildTableParameters([10,10,200,10,10,10,10], { "data": columnArray, "placeholder" : "..." })).makeEditable( {
-        "placeholder" : "...", 
+    ChassisTable = $('#ChassisTable').dataTable(buildTableParameters([10,10,200,10,10,10,10], { "data": columnArray })).makeEditable( {
+        
         "aoColumns": [
             null,
             {
@@ -172,7 +176,7 @@ function init_ChassisTable(columnArray) {
                 submit: 'Ok',
                 sUpdateURL: function(value, cellpos){ addToQueue(value,ChassisTable.fnGetPosition( this )); }
             },
-            {
+            {  
                 tooltip: 'Click to change IPv4 address',
                 event: 'click',
                 submit: 'Ok',
@@ -195,11 +199,6 @@ function init_ChassisTable(columnArray) {
             },
         ]        
     });
-    $('td', ChassisTable.fnGetNodes()).editable(function(value, settings) {
-    return(value);
-    }, {
-    placeholder : '&amp;nbsp; '
-}); 
     $('#ChassisTable').DataTable().columns.adjust().draw();
     return ChassisTable;
 }
@@ -250,11 +249,14 @@ function callback_GetInterfaces(data,status)
         name = data[i].name;
         if (data[i].isAggr == true) 
         {
-            name = '<a href="javascript:;" onclick="getAggregate(\'' +data[i].name + '\');">' + data[i].name + "</a>";
+            name = '<a href="javascript:;" onclick="getAggregate(\'' +data[i].name + '\');">' + data[i].name + "</a> <img src='/img/ae.png' width=20px height=20px>";
             console.log(name)
         }
-     
-        columnArray[i] = [i, name , data[i].description, ipv4 , ipv6, data[i].state, "<input type='checkbox' value='" + data[i].name + "'>" ];
+        state = data[i].state;
+        if (state == 'STOPPED') state = "<img src='/img/grey.png' width=12px height=12px> STOPPED";
+        if (state == 'OK') state = "<img src='/img/green.png' width=12px height=12px> OK";
+
+        columnArray[i] = [i, name , data[i].description, ipv4 , ipv6, state, "<input type='checkbox' value='" + data[i].name + "'>" ];
     }; 
     $("#ChassisTable").show();
     $('#ChassisCommitIndicator').hide(); 
@@ -443,7 +445,8 @@ function callback_GetTopology(data,status)
         {
             init_Canvas(data);
         }
-    }   
+    }  
+    $('#TopologyIndicator').hide(); 
 };
 
 function buildCircle(x,y,radius)
@@ -462,7 +465,7 @@ function buildCircle(x,y,radius)
 
 function buildSwitchShape(x,y, description) 
 {
-    var layer = new Kinetic.Layer();
+   //var layer = new Kinetic.Layer();
     var imageObj = new Image(120,75);
     imageObj.src = '/img/switch.png';
     var image = new Kinetic.Image({
@@ -547,7 +550,8 @@ function init_Canvas(data)
         draggable: false
     });
     var layer = new Kinetic.Layer();
-    // Text information
+
+    // Text information used for displaying link information on top of the topology
     var text = new Kinetic.Text({
         x: 10,
         y: 10,
@@ -560,48 +564,65 @@ function init_Canvas(data)
     layer.add(text);
     var switchInfo = [];
     var xindex=100;
+    var yindex=50;
+
     // Read all the devices from the topology info and create images
     for (var i=0; i < Object.keys(data.devices.device).length; i++) 
     {
         resourcename  = get_resourcename_from_resourceid(data.devices.device[i].resourceID,data)
-        switchShape = buildSwitchShape(xindex,100, resourcename);
-        switchInfo[i] = ({ x: xindex, y:100 , name: resourcename, deviceid : data.devices.device[i].id});
+        switchShape = buildSwitchShape(xindex,yindex, resourcename);
+        switchInfo[i] = ({ x: xindex, y: yindex , name: resourcename, deviceid : data.devices.device[i].id});
         layer.add(switchShape);
         switchShape.on('click', function(e) { location.href="/router/" + e.target.name(); });
         switchShape.on('mouseover', function() {  document.body.style.cursor = 'pointer'; });
         switchShape.on('mouseout', function() {  document.body.style.cursor = 'default'; });
-        xindex=xindex+300;
+        
+        xindex=(xindex+250)%500;
+        yindex=(yindex+75)%400;
+	    
     }
-  
+    layer.draw();
+    var numlines =[]
     // Read all links from the topology info and create lines
     for (var i=0; i < Object.keys(data.links.link).length; i++) {
+    	if ((typeof data.links.link[i].to.id !== 'undefined') & (typeof data.links.link[i].from.id !== 'undefined') ) {
 
-        from = getSwitchInfo_from_deviceid(data.links.link[i].from.deviceId, switchInfo);
-        to = getSwitchInfo_from_deviceid(data.links.link[i].to.deviceId, switchInfo);
-        description = from.name + ": " + data.links.link[i].from.id + " -> " + to.name + ": " + data.links.link[i].to.id;
-        var line = new Kinetic.Line({
-            dash: [10,0,10,0],
-            points: [from.x+60, from.y+38+(i*5), to.x+60, to.y+38+(i*5)],
-            name: description,
-            stroke: 'black',
-            strokeWidth: 3,
-            lineCap: 'round',
-            lineJoin: 'round'
-        });  
-        
-        layer.add(line);
-        line.on('mouseover', function() { this.stroke('orange'); this.dashEnabled(true); text.setText(this.name()); layer.draw(); });
-        line.on('mouseout', function() { this.stroke('black');  text.setText(""); layer.draw(); });
-        line.moveToBottom();
-        layer.draw();
+            from = getSwitchInfo_from_deviceid(data.links.link[i].from.deviceId, switchInfo);
+            to = getSwitchInfo_from_deviceid(data.links.link[i].to.deviceId, switchInfo);
+    	
+            description = from.name + ": " + data.links.link[i].from.id + " -> " + to.name + ": " + data.links.link[i].to.id;
+            
+            // numlines contains the number of lines connected to a device, used to move the next line slightly, so they don't overlap
+            if (!(from.name in numlines))  numlines[from.name] = 0;
+            if (!(to.name in numlines))  numlines[to.name] = 0;  
+
+            var line = new Kinetic.Line({
+                dash: [10,0,10,0],
+                points: [from.x+60+(numlines[from.name]*5), from.y+38+(numlines[from.name]*5), to.x+60+(numlines[from.name]*5), to.y+38+(numlines[from.name]*5)],
+                name: description,
+                stroke: 'black',
+                strokeWidth: 3,
+                lineCap: 'round',
+                lineJoin: 'round'
+            });  
+            
+            numlines[from.name] +=1;
+            numlines[to.name] +=1;
+
+            layer.add(line);
+            line.on('mouseover', function() { this.stroke('orange'); this.dashEnabled(true); text.setText(this.name()); layer.draw(); });
+            line.on('mouseout', function() { this.stroke('black');  text.setText(""); layer.draw(); });
+            line.moveToBottom();
+            layer.draw();
+        }
     }
-
     stage.add(layer);
 }
 
 function getSwitchInfo_from_deviceid(deviceid, switchInfo)
-{
+{ 
     for (var i=0 ; i< switchInfo.length; i ++) 
-        if (switchInfo[i].deviceid == deviceid) return switchInfo[i];
+        if (switchInfo[i].deviceid == deviceid) {
+	return switchInfo[i];}
 }
 
