@@ -21,6 +21,7 @@ sudo apt-get install libxslt1-dev
 sudo apt-get install python-pip python-dev build-essential 
 sudo apt-get install python-pip
 sudo pip install Flask
+sudo pip install requests
 sudo pip install ncclient==0.3.2
 sudo pip install ciscoconfparse
 </pre>
@@ -40,11 +41,11 @@ This means that when sending an RPC call, the RPC call is not ended correctly, a
 Manual patch in operations/rpc.py to fix this:
 
 <pre>
-# line 181-182:
-# - if tag != qualify("rpc-reply"):
-# -     return
-# + # if tag != qualify("rpc-reply"):
-# + #    return
+line 181-182:
+- if tag != qualify("rpc-reply"):
+-     return
++ # if tag != qualify("rpc-reply"):
++ #    return
 </pre>
 
 Current functionality
@@ -55,8 +56,12 @@ Overview page:
 - starting and stopping single / group of resources 
 - Remove single / group of resources (works, but does not correctly show resources afterwards)
 
-Overview VLAN page:
+Overview Network page:
 - List all VLANs found in all resources, list on which resources the vlans are configured
+
+Topology page:
+- Shows the topology of the network as managed by OpenNaaS
+- Allows naviagtion to specific resources
 
 Queue overview:
 - List all queue items of all resources
@@ -66,7 +71,7 @@ Resource Chassis page:
 - Add / Change interface description
 - Add / Change interface IPv4 address
 - Add / Change interface IPv6 address
-- Bring interface / group of interfaces up / down (not working at the moment)
+- Bring interface / group of interfaces up / down
 - Review Aggregated links information
 
 Resource Queue page:
@@ -78,3 +83,11 @@ Resource info page:
 - List Resource protocol context information
 
 Note: Currently only Juniper EX and M series routers are supported using the router resource.
+
+Local resources
+---------------
+A separate module described by 'local resources' allows you to access cisco routers / switches using NETCONF, which are not managed in OpenNaaS.
+It allows the following basic functionality:
+- Overview of interface status, interface description, vlan tagging and detected MAC addresses
+- Changing of interface administrative status, interface description and vlan tagging.
+- Changes are queued using a local queuing mechanism.
